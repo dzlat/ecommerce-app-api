@@ -14,8 +14,50 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Size {
+  XS
+  S
+  M
+  L
+  XL
+  XXL
+  XXXL
+}
+
+enum Color {
+  RED
+  BLUE
+  GREEN
+  BLACK
+  WHITE
+  YELLOW
+  PINK
+}
+
 model Product {
-  id          String @id @default(uuid())
-  title       String
+  id          String   @id @default(uuid())
+  title       String   @unique
   description String
+  brand       String?
+  category    String?
+  rating      Decimal?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  variants ProductVariant[]
+}
+
+model ProductVariant {
+  id            String  @id @default(uuid())
+  productId     String
+  size          Size
+  color         Color
+  quantity      Int     @default(0)
+  originalPrice Decimal
+  price         Decimal
+
+  Product Product @relation(fields: [productId], references: [id])
+
+  @@unique([productId, size, color])
+  @@map("product_variants")
 }

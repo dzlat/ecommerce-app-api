@@ -1,12 +1,15 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductsModule } from './products/products.module';
+import { CatsController } from './cats/cats.controller';
+import { CatsModule } from './cats/cats.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [PrismaModule, ProductsModule],
-  controllers: [AppController],
+  imports: [PrismaModule, ProductsModule, CatsModule, UsersModule],
+  controllers: [AppController, CatsController],
   providers: [AppService],
 })
 export class AppModule {}
