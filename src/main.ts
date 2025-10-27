@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { PrismaClientExceptionFilter } from './prisma-client-exception.filter';
 
 const allowedOrigins = ['http://localhost:3000', 'http://localhost:8000'];
 
@@ -32,6 +33,9 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
+  const httpAdapter = app.getHttpAdapter();
+
+  app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.setGlobalPrefix('api');
   await app.listen(process.env.PORT ?? 8000);

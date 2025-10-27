@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   ParseUUIDPipe,
+  NotFoundException,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { Prisma } from '../../generated/prisma';
@@ -34,8 +35,14 @@ export class ProductsController {
 
   @Get(':id')
   @ApiOkResponse({ type: ProductEntity })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.productsService.findOne(id);
+  async findOne(@Param('id', ParseUUIDPipe) id: string) {
+    const product = await this.productsService.findOne(id);
+
+    if (!product) {
+      throw new NotFoundException(`Product with uuid ${id} does not exist`);
+    }
+
+    return product;
   }
 
   @Patch(':id')
