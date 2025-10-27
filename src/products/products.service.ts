@@ -1,26 +1,68 @@
-import { Injectable } from '@nestjs/common';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from 'generated/prisma';
+import { DatabaseService } from 'src/database/database.service';
 
 @Injectable()
 export class ProductsService {
-  create(createProductDto: CreateProductDto) {
-    return 'This action adds a new product';
+  constructor(private readonly dbService: DatabaseService) {}
+
+  create(createProductDto: Prisma.ProductCreateInput) {
+    return this.dbService.product.create({
+      data: createProductDto,
+    });
   }
 
   findAll() {
-    return `This action returns all products`;
+    return this.dbService.product.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  async findOne(id: string) {
+    const foundProduct = await this.dbService.product.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!foundProduct) {
+      throw new NotFoundException('Product was not found');
+    }
+
+    return foundProduct;
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async update(id: string, updateProductDto: Prisma.ProductUpdateInput) {
+    try {
+      const updatedProduct = await this.dbService.product.update({
+        where: { id },
+        data: updateProductDto,
+      });
+
+      return updatedProduct;
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        // The .code property can be accessed in a type-safe manner
+        if (e.code === 'P2018') {
+          throw new NotFoundException('Product with such ID was not found');
+        }
+      }
+    }
   }
 
-  remove(id: number) {
+  async remove(id: string) {
+    try {
+      const removedProduct = await this.dbService.product.delete({
+        where: { id },
+      });
+
+      return removedProduct;
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        // The .code property can be accessed in a type-safe manner
+        if (e.code === 'P2018') {
+          throw new NotFoundException('Product with such ID was not found');
+        }
+      }
+    }
     return `This action removes a #${id} product`;
   }
 }
