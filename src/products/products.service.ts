@@ -16,53 +16,24 @@ export class ProductsService {
     return this.dbService.product.findMany();
   }
 
-  async findOne(id: string) {
-    const foundProduct = await this.dbService.product.findUnique({
+  findOne(id: string) {
+    return this.dbService.product.findUnique({
       where: {
         id,
       },
     });
-
-    if (!foundProduct) {
-      throw new NotFoundException('Product was not found');
-    }
-
-    return foundProduct;
   }
 
-  async update(id: string, updateProductDto: Prisma.ProductUpdateInput) {
-    try {
-      const updatedProduct = await this.dbService.product.update({
-        where: { id },
-        data: updateProductDto,
-      });
-
-      return updatedProduct;
-    } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        // The .code property can be accessed in a type-safe manner
-        if (e.code === 'P2018') {
-          throw new NotFoundException('Product with such ID was not found');
-        }
-      }
-    }
+  update(id: string, updateProductDto: Prisma.ProductUpdateInput) {
+    return this.dbService.product.update({
+      where: { id },
+      data: updateProductDto,
+    });
   }
 
-  async remove(id: string) {
-    try {
-      const removedProduct = await this.dbService.product.delete({
-        where: { id },
-      });
-
-      return removedProduct;
-    } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        // The .code property can be accessed in a type-safe manner
-        if (e.code === 'P2018') {
-          throw new NotFoundException('Product with such ID was not found');
-        }
-      }
-    }
-    return `This action removes a #${id} product`;
+  remove(id: string) {
+    return this.dbService.product.delete({
+      where: { id },
+    });
   }
 }
