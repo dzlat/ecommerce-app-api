@@ -3,17 +3,14 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { ProductsModule } from './products/products.module';
-import { CatsController } from './cats/cats.controller';
-import { CatsModule } from './cats/cats.module';
-import { UsersModule } from './users/users.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     ProductsModule,
-    CatsModule,
-    UsersModule,
     ThrottlerModule.forRoot([
       {
         name: 'short',
@@ -27,8 +24,10 @@ import { APP_GUARD } from '@nestjs/core';
       },
     ]),
     DatabaseModule,
+    UsersModule,
+    AuthModule,
   ],
-  controllers: [AppController, CatsController],
+  controllers: [AppController],
   providers: [
     AppService,
     {

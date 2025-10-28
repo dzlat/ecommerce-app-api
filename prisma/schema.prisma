@@ -34,6 +34,11 @@ enum Color {
   PINK
 }
 
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
 model Product {
   id          String   @id @default(uuid())
   title       String   @unique
@@ -60,4 +65,14 @@ model ProductVariant {
 
   @@unique([productId, size, color])
   @@map("product_variants")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  email     String?  @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  role      Role     @default(CUSTOMER)
 }
