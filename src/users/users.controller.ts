@@ -19,6 +19,8 @@ import {
 } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
 import { Roles } from '@app/auth/decorators/roles.decorator';
+import { UserFromToken } from '@app/auth/decorators/user-from-token.decorator';
+import { UserFromTokenEntity } from '@app/auth/entities/user-from-token.entity';
 
 @ApiBearerAuth()
 @Controller('users')
@@ -37,6 +39,12 @@ export class UsersController {
   @ApiOkResponse({ type: UserEntity, isArray: true })
   findAll(): Promise<UserEntity[]> {
     return this.usersService.findAll();
+  }
+
+  @Roles('ADMIN', 'CUSTOMER')
+  @Get('me')
+  me(@UserFromToken() userFromToken: UserFromTokenEntity): Promise<UserEntity> {
+    return this.usersService.findOne({ id: userFromToken.sub });
   }
 
   @Get(':id')
