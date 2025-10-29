@@ -13,8 +13,8 @@ export class UserEntity implements User {
   @ApiProperty()
   name: string;
 
-  @ApiProperty({ nullable: true, type: 'string', required: false })
-  email: string | null;
+  @ApiProperty()
+  email: string;
 
   @ApiProperty()
   createdAt: Date;

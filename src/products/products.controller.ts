@@ -6,17 +6,20 @@ import {
   Patch,
   Param,
   Delete,
-  Query,
   ParseUUIDPipe,
   NotFoundException,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { Prisma } from '../../generated/prisma';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 import { ProductEntity } from './entities/product.entity';
 
+@ApiBearerAuth()
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}

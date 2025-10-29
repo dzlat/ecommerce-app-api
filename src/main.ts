@@ -9,7 +9,6 @@ const allowedOrigins = ['http://localhost:3000', 'http://localhost:8000'];
 
 const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
-    console.log('ORIGIN', origin);
     if (allowedOrigins.includes(origin) || !origin) {
       callback(null, true);
     } else {
@@ -28,6 +27,7 @@ async function bootstrap() {
     .setTitle('Ecommerce')
     .setDescription('The Ecommerce API description')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
@@ -41,4 +41,4 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   await app.listen(process.env.PORT ?? 8000);
 }
-bootstrap();
+void bootstrap();
