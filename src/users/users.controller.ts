@@ -18,7 +18,7 @@ import {
   ApiOkResponse,
 } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
-import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Roles } from '@app/auth/decorators/roles.decorator';
 
 @ApiBearerAuth()
 @Controller('users')
