@@ -18,9 +18,11 @@ import {
   ApiOkResponse,
 } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 
 @ApiBearerAuth()
 @Controller('users')
+@Roles('ADMIN')
 @SerializeOptions({ type: UserEntity })
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

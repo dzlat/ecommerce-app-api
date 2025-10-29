@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from './dto/sign-up.dto';
 import { AuthEntity } from './entities/auth.entity';
+import { UserFromTokenEntity } from './entities/user-from-token.entity';
 
 @Injectable()
 export class AuthService {
@@ -25,7 +26,7 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    const payload = { sub: user.id, role: user.role };
+    const payload: UserFromTokenEntity = { sub: user.id, role: user.role };
 
     return {
       accessToken: await this.jwtService.signAsync(payload),
@@ -36,7 +37,10 @@ export class AuthService {
   async signUp(signUpDto: SignUpDto): Promise<AuthEntity> {
     const createdUser = await this.usersService.create(signUpDto);
 
-    const payload = { sub: createdUser.name, role: createdUser.role };
+    const payload: UserFromTokenEntity = {
+      sub: createdUser.name,
+      role: createdUser.role,
+    };
 
     return {
       accessToken: await this.jwtService.signAsync(payload),
