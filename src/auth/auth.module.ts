@@ -6,6 +6,8 @@ import { UsersModule } from '@app/users/users.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth.guard';
 import { RolesGuard } from './roles.guard';
+import { RefreshTokenService } from './refresh-token.service';
+import { DatabaseModule } from '@app/database/database.module';
 
 @Module({
   imports: [
@@ -13,10 +15,12 @@ import { RolesGuard } from './roles.guard';
       global: true,
     }),
     UsersModule,
+    DatabaseModule,
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
+    RefreshTokenService,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,

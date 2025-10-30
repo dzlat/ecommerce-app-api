@@ -43,6 +43,7 @@ export class UsersController {
 
   @Roles('ADMIN', 'CUSTOMER')
   @Get('me')
+  @ApiOkResponse({ type: UserEntity })
   me(@UserFromToken() userFromToken: UserFromTokenEntity): Promise<UserEntity> {
     return this.usersService.findOne({ id: userFromToken.sub });
   }

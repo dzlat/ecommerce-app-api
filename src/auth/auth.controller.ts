@@ -19,8 +19,10 @@ import {
 import { SignUpDto } from './dto/sign-up.dto';
 import { Public } from './decorators/public.decorator';
 import type { Response } from 'express';
-import { REFRESH_TOKEN_COOKIE } from './constants';
+import { DEVICE_ID_COOKIE, REFRESH_TOKEN_COOKIE } from './constants';
 import { Cookies } from './decorators/cookies.decorator';
+import { UserFromToken } from './decorators/user-from-token.decorator';
+import { UserFromTokenEntity } from './entities/user-from-token.entity';
 
 @SerializeOptions({ type: AuthEntity })
 @Controller('auth')
@@ -35,10 +37,21 @@ export class AuthController {
     @Body() signInDto: SignInDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<AuthEntity> {
-    const { accessToken, refreshToken, user } =
+    const { accessToken, refreshToken, user, deviceId } =
       await this.authService.signIn(signInDto);
 
-    response.cookie(REFRESH_TOKEN_COOKIE, refreshToken);
+    response.cookie(REFRESH_TOKEN_COOKIE, refreshToken, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
+    response.cookie(DEVICE_ID_COOKIE, deviceId, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 1000 * 60 * 60 * 24 * 365, // 1 year
+    });
 
     return {
       accessToken,
@@ -56,7 +69,12 @@ export class AuthController {
     const { accessToken, refreshToken, user } =
       await this.authService.signUp(signUpDto);
 
-    response.cookie(REFRESH_TOKEN_COOKIE, refreshToken);
+    response.cookie(REFRESH_TOKEN_COOKIE, refreshToken, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
 
     return {
       accessToken,
@@ -69,16 +87,18 @@ export class AuthController {
   @ApiCreatedResponse({ type: AuthEntity })
   async refresh(
     @Res({ passthrough: true }) response: Response,
+    @UserFromToken() userFromToken: UserFromTokenEntity,
+    @Cookies(DEVICE_ID_COOKIE) deviceId?: string,
     @Cookies(REFRESH_TOKEN_COOKIE) refreshTokenFromCookie?: string,
   ): Promise<AuthEntity> {
-    if (!refreshTokenFromCookie) {
+    if (!refreshTokenFromCookie || !deviceId) {
       throw new UnauthorizedException();
     }
 
-    console.log(refreshTokenFromCookie);
-
     const { accessToken, refreshToken, user } = await this.authService.refresh(
       refreshTokenFromCookie,
+      deviceId,
+      userFromToken.sub,
     );
 
     response.cookie(REFRESH_TOKEN_COOKIE, refreshToken);
@@ -87,5 +107,20 @@ export class AuthController {
       accessToken,
       user,
     };
+  }
+
+  @ApiBearerAuth()
+  @Post('logout')
+  logout(
+    @Res({ passthrough: true }) response: Response,
+    @UserFromToken() userFromToken: UserFromTokenEntity,
+    @Cookies(DEVICE_ID_COOKIE) deviceId: string,
+  ) {
+    response.clearCookie(REFRESH_TOKEN_COOKIE, { sameSite: 'lax' });
+    response.clearCookie(DEVICE_ID_COOKIE, { sameSite: 'lax' });
+
+    if (deviceId) {
+      return this.authService.logout(userFromToken.sub, deviceId);
+    }
   }
 }

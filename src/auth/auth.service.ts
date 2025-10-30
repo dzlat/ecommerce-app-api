@@ -6,16 +6,20 @@ import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from './dto/sign-up.dto';
 import { UserFromTokenEntity } from './entities/user-from-token.entity';
 import { UserEntity } from '@app/users/entities/user.entity';
+import { v4 as uuidv4 } from 'uuid';
+import { RefreshTokenService } from './refresh-token.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly refreshTokenService: RefreshTokenService,
   ) {}
 
   async signIn(signInDto: SignInDto) {
     const user = await this.usersService.findOne({ email: signInDto.email });
+    const deviceId = uuidv4();
 
     const isPasswordMatch = await bcrypt.compare(
       signInDto.password,
@@ -28,18 +32,28 @@ export class AuthService {
 
     const [accessToken, refreshToken] = await this.generateTokenPair(user);
 
+    await this.refreshTokenService.addToken(user.id, deviceId, refreshToken);
+
     return {
       accessToken,
       refreshToken,
       user,
+      deviceId,
     };
   }
 
   async signUp(signUpDto: SignUpDto) {
     const createdUser = await this.usersService.create(signUpDto);
+    const deviceId = uuidv4();
 
     const [accessToken, refreshToken] =
       await this.generateTokenPair(createdUser);
+
+    await this.refreshTokenService.addToken(
+      createdUser.id,
+      deviceId,
+      refreshToken,
+    );
 
     return {
       accessToken,
@@ -66,7 +80,21 @@ export class AuthService {
     ]);
   }
 
-  async refresh(refreshTokenFromCookie: string) {
+  async refresh(
+    refreshTokenFromCookie: string,
+    deviceId: string,
+    userId: UserEntity['id'],
+  ) {
+    const isWhitelistedToken =
+      await this.refreshTokenService.checkIfTokenIsWhitelisted(
+        userId,
+        deviceId,
+      );
+
+    if (!isWhitelistedToken) {
+      throw new UnauthorizedException();
+    }
+
     let userFromToken: UserFromTokenEntity;
 
     try {
@@ -84,10 +112,16 @@ export class AuthService {
 
     const [accessToken, refreshToken] = await this.generateTokenPair(user);
 
+    await this.refreshTokenService.updateToken(user.id, deviceId, refreshToken);
+
     return {
       accessToken,
       refreshToken,
       user,
     };
+  }
+
+  async logout(userId: UserEntity['id'], deviceId: string): Promise<void> {
+    await this.refreshTokenService.removeToken(userId, deviceId);
   }
 }
