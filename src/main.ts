@@ -4,6 +4,7 @@ import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.int
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { PrismaClientExceptionFilter } from './prisma-client-exception.filter';
+import cookieParser from 'cookie-parser';
 
 const allowedOrigins = ['http://localhost:3000', 'http://localhost:8000'];
 
@@ -34,6 +35,8 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, documentFactory);
 
   const httpAdapter = app.getHttpAdapter();
+
+  app.use(cookieParser());
 
   app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
