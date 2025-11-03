@@ -2,6 +2,7 @@ import { DatabaseService } from '@app/database/database.service';
 import { UserEntity } from '@app/users/entities/user.entity';
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { generateOpaqueToken } from './utils/refresh-token.util';
 
 const ROUNDS_OF_HASHING = 10;
 
@@ -9,45 +10,43 @@ const ROUNDS_OF_HASHING = 10;
 export class RefreshTokenService {
   constructor(private readonly db: DatabaseService) {}
 
-  async addToken(
-    userId: UserEntity['id'],
-    deviceId: string,
-    plainToken: string,
-  ) {
-    const hashedToken = await bcrypt.hash(plainToken, ROUNDS_OF_HASHING);
+  async generateAndUpsert(userId: UserEntity['id'], deviceId: string) {
+    const plainToken = generateOpaqueToken();
 
-    await this.db.refreshToken.create({
-      data: { userId, deviceId, tokenHash: hashedToken },
+    const tokenHash = await bcrypt.hash(plainToken, ROUNDS_OF_HASHING);
+    const REFRESH_TTL_MS = Number(process.env.REFRESH_TOKEN_TTL);
+    const expiresAt = new Date(Date.now() + REFRESH_TTL_MS);
+
+    await this.db.refreshToken.upsert({
+      where: { deviceId_userId: { userId, deviceId } },
+      create: { userId, deviceId, tokenHash, expiresAt },
+      update: { tokenHash, expiresAt },
     });
+
+    return plainToken;
   }
 
-  async removeToken(userId: UserEntity['id'], deviceId: string) {
+  async remove(userId: UserEntity['id'], deviceId: string) {
     await this.db.refreshToken.delete({
       where: { deviceId_userId: { userId, deviceId } },
     });
   }
 
-  async updateToken(
-    userId: UserEntity['id'],
-    deviceId: string,
-    plainToken: string,
-  ) {
-    const hashedToken = await bcrypt.hash(plainToken, ROUNDS_OF_HASHING);
-
-    await this.db.refreshToken.update({
-      where: { deviceId_userId: { userId, deviceId } },
-      data: { tokenHash: hashedToken },
+  async findOne(userId: UserEntity['id'], deviceId: string) {
+    return this.db.refreshToken.findUnique({
+      where: { deviceId_userId: { deviceId, userId } },
     });
   }
 
-  async checkIfTokenIsWhitelisted(
-    userId: UserEntity['id'],
-    deviceId: string,
-  ): Promise<boolean> {
-    const token = await this.db.refreshToken.findUnique({
-      where: { deviceId_userId: { deviceId, userId } },
-    });
+  async verify(userId: UserEntity['id'], deviceId: string, plainToken: string) {
+    const record = await this.findOne(userId, deviceId);
+    if (!record) return null;
 
-    return !!token;
+    const match = await bcrypt.compare(plainToken, record.tokenHash);
+    if (!match) return null;
+
+    if (record.expiresAt.getTime() <= Date.now()) return null;
+
+    return record;
   }
 }

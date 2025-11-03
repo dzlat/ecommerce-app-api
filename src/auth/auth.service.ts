@@ -4,10 +4,10 @@ import { SignInDto } from './dto/sign-in.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from './dto/sign-up.dto';
-import { UserFromTokenEntity } from './entities/user-from-token.entity';
 import { UserEntity } from '@app/users/entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { RefreshTokenService } from './refresh-token.service';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -30,15 +30,17 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    const [accessToken, refreshToken] = await this.generateTokenPair(user);
-
-    await this.refreshTokenService.addToken(user.id, deviceId, refreshToken);
+    const accessToken = await this.generateAccessToken(user);
+    const refreshToken = await this.refreshTokenService.generateAndUpsert(
+      user.id,
+      deviceId,
+    );
 
     return {
       accessToken,
       refreshToken,
-      user,
       deviceId,
+      user,
     };
   }
 
@@ -46,38 +48,18 @@ export class AuthService {
     const createdUser = await this.usersService.create(signUpDto);
     const deviceId = uuidv4();
 
-    const [accessToken, refreshToken] =
-      await this.generateTokenPair(createdUser);
-
-    await this.refreshTokenService.addToken(
+    const accessToken = await this.generateAccessToken(createdUser);
+    const refreshToken = await this.refreshTokenService.generateAndUpsert(
       createdUser.id,
       deviceId,
-      refreshToken,
     );
 
     return {
       accessToken,
       refreshToken,
+      deviceId,
       user: createdUser,
     };
-  }
-
-  private generateTokenPair(userData: UserEntity) {
-    const payload: UserFromTokenEntity = {
-      sub: userData.id,
-      role: userData.role,
-    };
-
-    return Promise.all([
-      this.jwtService.signAsync(payload, {
-        secret: process.env.ACCESS_TOKEN_SECRET,
-        expiresIn: '2 days',
-      }),
-      this.jwtService.signAsync(payload, {
-        secret: process.env.REFRESH_TOKEN_SECRET,
-        expiresIn: '7 days',
-      }),
-    ]);
   }
 
   async refresh(
@@ -85,34 +67,23 @@ export class AuthService {
     deviceId: string,
     userId: UserEntity['id'],
   ) {
-    const isWhitelistedToken =
-      await this.refreshTokenService.checkIfTokenIsWhitelisted(
-        userId,
-        deviceId,
-      );
+    const tokenRecord = await this.refreshTokenService.verify(
+      userId,
+      deviceId,
+      refreshTokenFromCookie,
+    );
 
-    if (!isWhitelistedToken) {
+    if (!tokenRecord) {
       throw new UnauthorizedException();
     }
 
-    let userFromToken: UserFromTokenEntity;
+    const user = await this.usersService.findOne({ id: userId });
 
-    try {
-      userFromToken = await this.jwtService.verifyAsync<UserFromTokenEntity>(
-        refreshTokenFromCookie,
-        {
-          secret: process.env.REFRESH_TOKEN_SECRET,
-        },
-      );
-    } catch {
-      throw new UnauthorizedException();
-    }
-
-    const user = await this.usersService.findOne({ id: userFromToken.sub });
-
-    const [accessToken, refreshToken] = await this.generateTokenPair(user);
-
-    await this.refreshTokenService.updateToken(user.id, deviceId, refreshToken);
+    const accessToken = await this.generateAccessToken(user);
+    const refreshToken = await this.refreshTokenService.generateAndUpsert(
+      user.id,
+      deviceId,
+    );
 
     return {
       accessToken,
@@ -122,6 +93,15 @@ export class AuthService {
   }
 
   async logout(userId: UserEntity['id'], deviceId: string): Promise<void> {
-    await this.refreshTokenService.removeToken(userId, deviceId);
+    await this.refreshTokenService.remove(userId, deviceId);
+  }
+
+  private async generateAccessToken(user: UserEntity) {
+    const payload: JwtPayload = { sub: user.id, role: user.role };
+
+    return this.jwtService.signAsync(payload, {
+      secret: process.env.ACCESS_TOKEN_SECRET,
+      expiresIn: Number(process.env.ACCESS_TOKEN_TTL),
+    });
   }
 }

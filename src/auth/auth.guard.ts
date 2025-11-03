@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { IS_PUBLIC_KEY } from './decorators/public.decorator';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -34,13 +35,14 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const payload = await this.jwtService.verifyAsync(token, {
-        secret: process.env.ACCESS_TOKEN_SECRET,
-      });
+      const { sub, role } = await this.jwtService.verifyAsync<JwtPayload>(
+        token,
+        {
+          secret: process.env.ACCESS_TOKEN_SECRET,
+        },
+      );
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      request['user'] = payload;
+      request['user'] = { role, userId: sub };
     } catch {
       throw new UnauthorizedException();
     }

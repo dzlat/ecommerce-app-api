@@ -1,7 +1,7 @@
-import { UserFromTokenEntity } from './auth/entities/user-from-token.entity';
+import { UserFromRequest } from './auth/entities/user-from-request.entity';
 
 declare module 'express' {
   interface Request {
-    user?: UserFromTokenEntity;
+    user?: UserFromRequest;
   }
 }

@@ -6,6 +6,12 @@ export class AuthEntity {
   @ApiProperty()
   accessToken: string;
 
+  @ApiProperty()
+  refreshToken: string;
+
+  @ApiProperty()
+  deviceId?: string;
+
   @Type(() => UserEntity)
   @ApiProperty()
   user: UserEntity;
