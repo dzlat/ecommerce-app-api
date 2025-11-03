@@ -3,6 +3,7 @@ import { UserEntity } from '@app/users/entities/user.entity';
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { generateOpaqueToken } from './utils/refresh-token.util';
+import { RefreshToken } from '@generated/prisma';
 
 const ROUNDS_OF_HASHING = 10;
 
@@ -32,10 +33,29 @@ export class RefreshTokenService {
     });
   }
 
+  async removeBySessionId(sessionId: RefreshToken['id']) {
+    await this.db.refreshToken.delete({
+      where: { id: sessionId },
+    });
+  }
+
+  async removeAllByUser(userId: UserEntity['id'], deviceId: string) {
+    await this.db.refreshToken.deleteMany({
+      where: {
+        userId,
+        NOT: { deviceId },
+      },
+    });
+  }
+
   async findOne(userId: UserEntity['id'], deviceId: string) {
     return this.db.refreshToken.findUnique({
       where: { deviceId_userId: { deviceId, userId } },
     });
+  }
+
+  async findAllByUser(userId: UserEntity['id']) {
+    return this.db.refreshToken.findMany({ where: { userId } });
   }
 
   async verify(userId: UserEntity['id'], deviceId: string, plainToken: string) {

@@ -1,8 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Res,
   SerializeOptions,
@@ -23,11 +26,16 @@ import { DEVICE_ID_COOKIE, REFRESH_TOKEN_COOKIE } from './constants';
 import { Cookies } from './decorators/cookies.decorator';
 import { AuthInfoPipe } from './decorators/user-from-token.decorator';
 import type { AuthInfo } from './interfaces/auth-info.interface';
+import { RefreshTokenService } from './refresh-token.service';
+import { SessionEntity } from './entities/session.entity';
 
 @SerializeOptions({ type: AuthEntity })
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly refreshTokenService: RefreshTokenService,
+  ) {}
 
   @Public()
   @HttpCode(HttpStatus.OK)
@@ -111,6 +119,29 @@ export class AuthController {
     if (deviceId) {
       return this.authService.logout(authInfo.userId, deviceId);
     }
+  }
+
+  @Get('sessions')
+  @SerializeOptions({ type: SessionEntity })
+  @ApiOkResponse({ type: SessionEntity })
+  @ApiBearerAuth()
+  sessions(@AuthInfoPipe() authInfo: AuthInfo) {
+    return this.refreshTokenService.findAllByUser(authInfo.userId);
+  }
+
+  @Delete('sessions/:id')
+  @ApiBearerAuth()
+  terminate(@Param('id') id: string) {
+    return this.refreshTokenService.removeBySessionId(id);
+  }
+
+  @Delete('sessions')
+  @ApiBearerAuth()
+  terminateAll(
+    @AuthInfoPipe() authInfo: AuthInfo,
+    @Cookies(DEVICE_ID_COOKIE) deviceId: string,
+  ) {
+    return this.refreshTokenService.removeAllByUser(authInfo.userId, deviceId);
   }
 
   private setCookie(
