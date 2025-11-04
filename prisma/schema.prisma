@@ -14,24 +14,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Size {
-  XS
-  S
-  M
-  L
-  XL
-  XXL
-  XXXL
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  COMPLETED
+  CANCELLED
 }
 
-enum Color {
-  RED
-  BLUE
-  GREEN
-  BLACK
-  WHITE
-  YELLOW
-  PINK
+enum Genre {
+  THRILLER
+  COMEDY
+  HORROR
+  ADVENTURE
+  ACTION
+  DRAMA
+  FANTASY
+  WESTERN
+  SCI_FI
+  ANIMATION
+  ROMANCE
 }
 
 enum Role {
@@ -39,32 +41,66 @@ enum Role {
   CUSTOMER
 }
 
-model Product {
+enum MovieFormat {
+  VHS
+  DVD
+  BLU_RAY
+  ULTRA_HD_BLU_RAY
+}
+
+model Order {
+  id        String      @id @default(uuid())
+  userId    String
+  total     Decimal
+  status    OrderStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  User  User        @relation(fields: [userId], references: [id])
+  Items OrderItem[]
+
+  @@index([userId, createdAt])
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int     @default(1)
+  unitPrice Decimal
+
+  Order   Order   @relation(fields: [orderId], references: [id])
+  Product Product @relation(fields: [productId], references: [id])
+
+  @@unique([orderId, productId])
+}
+
+model Movie {
   id          String   @id @default(uuid())
   title       String   @unique
   description String
-  brand       String?
-  category    String?
-  rating      Decimal?
+  genre       Genre
+  rating      Float?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  variants ProductVariant[]
+  Products Product[]
+  Reviews  Review[]
 }
 
-model ProductVariant {
-  id            String  @id @default(uuid())
-  productId     String
-  size          Size
-  color         Color
-  quantity      Int     @default(0)
+model Product {
+  id            String      @id @default(uuid())
+  movieId       String
+  quantity      Int         @default(0)
+  format        MovieFormat
   originalPrice Decimal
   price         Decimal
 
-  Product Product @relation(fields: [productId], references: [id])
+  Movie      Movie       @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  Favorites  Favorite[]
+  OrderItems OrderItem[]
 
-  @@unique([productId, size, color])
-  @@map("product_variants")
+  @@unique([movieId, format])
 }
 
 model User {
@@ -75,7 +111,26 @@ model User {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   role          Role           @default(CUSTOMER)
-  refreshTokens RefreshToken[]
+  RefreshTokens RefreshToken[]
+  Reviews       Review[]
+  Favorites     Favorite[]
+  Orders        Order[]
+}
+
+model Review {
+  id        String  @id @default(uuid())
+  title     String
+  content   String
+  rating    Float
+  shouldSee Boolean
+  userId    String
+  movieId   String
+
+  Movie Movie @relation(fields: [movieId], references: [id])
+  User  User  @relation(fields: [userId], references: [id])
+
+  @@index([movieId])
+  @@index([userId])
 }
 
 model RefreshToken {
@@ -87,7 +142,18 @@ model RefreshToken {
   deviceId  String
   userAgent String?
 
-  user User @relation(fields: [userId], references: [id])
+  User User @relation(fields: [userId], references: [id])
 
   @@unique([deviceId, userId])
+  @@index([userId])
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  User    User    @relation(fields: [userId], references: [id])
+  Product Product @relation(fields: [productId], references: [id])
 }

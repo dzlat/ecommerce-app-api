@@ -1,0 +1,26 @@
+import { DecimalProperty } from '@common/decorators/decimal.decorator';
+import { DecimalPatch } from '@common/entities/decimal.entity';
+import { ApiProperty } from '@nestjs/swagger';
+import { $Enums, Product } from 'generated/prisma';
+
+export class ProductEntity implements Product {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  movieId: string;
+
+  @ApiProperty()
+  quantity: number;
+
+  @ApiProperty()
+  format: $Enums.MovieFormat;
+
+  @DecimalProperty()
+  @ApiProperty({ type: 'number' })
+  originalPrice: DecimalPatch;
+
+  @DecimalProperty()
+  @ApiProperty({ type: 'number' })
+  price: DecimalPatch;
+}

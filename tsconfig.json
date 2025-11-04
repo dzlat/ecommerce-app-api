@@ -22,10 +22,8 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@app/*": ["src/*"],
+      "@modules/*": ["src/modules/*"],
       "@common/*": ["src/common/*"],
-      "@config/*": ["src/config/*"],
-      "@database/*": ["src/database/*"],
       "@generated/*": ["generated/*"]
     }
   }
