@@ -24,7 +24,7 @@ import { Public } from './decorators/public.decorator';
 import type { Response } from 'express';
 import { DEVICE_ID_COOKIE, REFRESH_TOKEN_COOKIE } from './constants';
 import { Cookies } from './decorators/cookies.decorator';
-import { AuthInfoPipe } from './decorators/user-from-token.decorator';
+import { AuthInfoFromRequest } from './decorators/user-from-token.decorator';
 import type { AuthInfo } from './interfaces/auth-info.interface';
 import { RefreshTokenService } from './refresh-token.service';
 import { SessionEntity } from './entities/session.entity';
@@ -83,7 +83,7 @@ export class AuthController {
   @ApiCreatedResponse({ type: AuthEntity })
   async refresh(
     @Res({ passthrough: true }) response: Response,
-    @AuthInfoPipe() authInfo: AuthInfo,
+    @AuthInfoFromRequest() authInfo: AuthInfo,
     @Cookies(DEVICE_ID_COOKIE) deviceId?: string,
     @Cookies(REFRESH_TOKEN_COOKIE) refreshTokenFromCookie?: string,
   ): Promise<AuthEntity> {
@@ -111,7 +111,7 @@ export class AuthController {
   @ApiBearerAuth()
   logout(
     @Res({ passthrough: true }) response: Response,
-    @AuthInfoPipe() authInfo: AuthInfo,
+    @AuthInfoFromRequest() authInfo: AuthInfo,
     @Cookies(DEVICE_ID_COOKIE) deviceId: string,
   ) {
     this.clearCookie(response);
@@ -125,7 +125,7 @@ export class AuthController {
   @SerializeOptions({ type: SessionEntity })
   @ApiOkResponse({ type: SessionEntity })
   @ApiBearerAuth()
-  sessions(@AuthInfoPipe() authInfo: AuthInfo) {
+  sessions(@AuthInfoFromRequest() authInfo: AuthInfo) {
     return this.refreshTokenService.findAllByUser(authInfo.userId);
   }
 
@@ -138,7 +138,7 @@ export class AuthController {
   @Delete('sessions')
   @ApiBearerAuth()
   terminateAll(
-    @AuthInfoPipe() authInfo: AuthInfo,
+    @AuthInfoFromRequest() authInfo: AuthInfo,
     @Cookies(DEVICE_ID_COOKIE) deviceId: string,
   ) {
     return this.refreshTokenService.removeAllByUser(authInfo.userId, deviceId);

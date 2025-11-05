@@ -8,6 +8,7 @@ import { ProductsModule } from '@modules/products/products.module';
 import { UsersModule } from '@modules/users/users.module';
 import { AuthModule } from '@modules/auth/auth.module';
 import { MoviesModule } from '@modules/movies/movies.module';
+import { FavoritesModule } from './modules/favorites/favorites.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { MoviesModule } from '@modules/movies/movies.module';
     UsersModule,
     AuthModule,
     MoviesModule,
+    FavoritesModule,
   ],
   controllers: [AppController],
   providers: [

@@ -156,4 +156,6 @@ model Favorite {
 
   User    User    @relation(fields: [userId], references: [id])
   Product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
 }

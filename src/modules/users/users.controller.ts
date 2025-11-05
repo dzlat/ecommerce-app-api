@@ -19,7 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
 import { Roles } from '@modules/auth/decorators/roles.decorator';
-import { AuthInfoPipe } from '@modules/auth/decorators/user-from-token.decorator';
+import { AuthInfoFromRequest } from '@modules/auth/decorators/user-from-token.decorator';
 import type { AuthInfo } from '@modules/auth/interfaces/auth-info.interface';
 
 @ApiBearerAuth()
@@ -44,7 +44,7 @@ export class UsersController {
   @Roles('ADMIN', 'CUSTOMER')
   @Get('me')
   @ApiOkResponse({ type: UserEntity })
-  me(@AuthInfoPipe() authInfo: AuthInfo): Promise<UserEntity> {
+  me(@AuthInfoFromRequest() authInfo: AuthInfo): Promise<UserEntity> {
     return this.usersService.findOne({ id: authInfo.userId });
   }
 

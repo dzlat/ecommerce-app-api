@@ -13,7 +13,7 @@ export class ProductEntity implements Product {
   @ApiProperty()
   quantity: number;
 
-  @ApiProperty()
+  @ApiProperty({ enum: Object.values($Enums.MovieFormat) })
   format: $Enums.MovieFormat;
 
   @DecimalProperty()

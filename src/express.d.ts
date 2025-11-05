@@ -1,7 +1,7 @@
-import { UserFromRequest } from './auth/entities/user-from-request.entity';
+import { AuthInfo } from '@modules/auth/interfaces/auth-info.interface';
 
 declare module 'express' {
   interface Request {
-    user?: UserFromRequest;
+    user?: AuthInfo;
   }
 }

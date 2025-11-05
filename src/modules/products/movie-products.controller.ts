@@ -16,11 +16,13 @@ import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiTags,
 } from '@nestjs/swagger';
 import { ProductEntity } from './entities/product.entity';
 import { Roles } from '@modules/auth/decorators/roles.decorator';
 import { Public } from '@modules/auth/decorators/public.decorator';
 
+@ApiTags('Products')
 @SerializeOptions({ type: ProductEntity })
 @Controller('movies/:movieId/products')
 export class MovieProductsController {
