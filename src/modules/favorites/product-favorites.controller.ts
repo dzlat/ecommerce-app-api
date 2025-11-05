@@ -14,11 +14,12 @@ import type { AuthInfo } from '@modules/auth/interfaces/auth-info.interface';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@modules/auth/decorators/roles.decorator';
 import { FavoriteEntity } from './entities/favorite.entity';
+import { Routes } from '@common/enums/routes';
 
 @ApiTags('Favorites')
 @ApiBearerAuth()
 @SerializeOptions({ type: FavoriteEntity })
-@Controller('products/:productId/favorites')
+@Controller(`${Routes.PRODUCTS}/:productId/${Routes.FAVORITES}`)
 export class ProductFavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
 

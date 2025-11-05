@@ -28,9 +28,10 @@ import { AuthInfoFromRequest } from './decorators/user-from-token.decorator';
 import type { AuthInfo } from './interfaces/auth-info.interface';
 import { RefreshTokenService } from './refresh-token.service';
 import { SessionEntity } from './entities/session.entity';
+import { Routes } from '@common/enums/routes';
 
 @SerializeOptions({ type: AuthEntity })
-@Controller('auth')
+@Controller(Routes.AUTH)
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
@@ -39,7 +40,7 @@ export class AuthController {
 
   @Public()
   @HttpCode(HttpStatus.OK)
-  @Post('login')
+  @Post(Routes.LOGIN)
   @ApiOkResponse({ type: AuthEntity })
   async signIn(
     @Body() signInDto: SignInDto,
@@ -59,7 +60,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post('register')
+  @Post(Routes.REGISTER)
   @ApiCreatedResponse({ type: AuthEntity })
   async signUp(
     @Body() signUpDto: SignUpDto,
@@ -79,7 +80,7 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
-  @Post('refresh')
+  @Post(Routes.REFRESH)
   @ApiCreatedResponse({ type: AuthEntity })
   async refresh(
     @Res({ passthrough: true }) response: Response,
@@ -106,7 +107,7 @@ export class AuthController {
     };
   }
 
-  @Post('logout')
+  @Post(Routes.LOGOUT)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   logout(
@@ -121,7 +122,7 @@ export class AuthController {
     }
   }
 
-  @Get('sessions')
+  @Get(Routes.SESSIONS)
   @SerializeOptions({ type: SessionEntity })
   @ApiOkResponse({ type: SessionEntity })
   @ApiBearerAuth()
@@ -129,13 +130,13 @@ export class AuthController {
     return this.refreshTokenService.findAllByUser(authInfo.userId);
   }
 
-  @Delete('sessions/:id')
+  @Delete(`${Routes.SESSIONS}/:id`)
   @ApiBearerAuth()
   terminate(@Param('id') id: string) {
     return this.refreshTokenService.removeBySessionId(id);
   }
 
-  @Delete('sessions')
+  @Delete(Routes.SESSIONS)
   @ApiBearerAuth()
   terminateAll(
     @AuthInfoFromRequest() authInfo: AuthInfo,

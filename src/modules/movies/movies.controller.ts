@@ -20,9 +20,10 @@ import {
   ApiOkResponse,
 } from '@nestjs/swagger';
 import { MovieEntity } from './entities/movie.entity';
+import { Routes } from '@common/enums/routes';
 
 @SerializeOptions({ type: MovieEntity })
-@Controller('movies')
+@Controller(Routes.MOVIES)
 export class MoviesController {
   constructor(private readonly moviesService: MoviesService) {}
 

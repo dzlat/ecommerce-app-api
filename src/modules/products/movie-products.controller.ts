@@ -21,10 +21,11 @@ import {
 import { ProductEntity } from './entities/product.entity';
 import { Roles } from '@modules/auth/decorators/roles.decorator';
 import { Public } from '@modules/auth/decorators/public.decorator';
+import { Routes } from '@common/enums/routes';
 
 @ApiTags('Products')
 @SerializeOptions({ type: ProductEntity })
-@Controller('movies/:movieId/products')
+@Controller(`${Routes.MOVIES}/:movieId/${Routes.PRODUCTS}`)
 export class MovieProductsController {
   constructor(private readonly productsService: ProductsService) {}
 

@@ -9,12 +9,13 @@ import { ProductsService } from './products.service';
 import { ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Public } from '@modules/auth/decorators/public.decorator';
 import { PaginatedProductEntity } from './entities/paginated-product.entity';
+import { Routes } from '@common/enums/routes';
 
 const DEFAULT_PER_PAGE = 20;
 
 @ApiTags('Products')
 @SerializeOptions({ type: PaginatedProductEntity })
-@Controller('products')
+@Controller(Routes.PRODUCTS)
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 

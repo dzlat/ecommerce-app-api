@@ -21,9 +21,10 @@ import { UserEntity } from './entities/user.entity';
 import { Roles } from '@modules/auth/decorators/roles.decorator';
 import { AuthInfoFromRequest } from '@modules/auth/decorators/user-from-token.decorator';
 import type { AuthInfo } from '@modules/auth/interfaces/auth-info.interface';
+import { Routes } from '@common/enums/routes';
 
 @ApiBearerAuth()
-@Controller('users')
+@Controller(Routes.USERS)
 @Roles('ADMIN')
 @SerializeOptions({ type: UserEntity })
 export class UsersController {
@@ -42,7 +43,7 @@ export class UsersController {
   }
 
   @Roles('ADMIN', 'CUSTOMER')
-  @Get('me')
+  @Get(Routes.ME)
   @ApiOkResponse({ type: UserEntity })
   me(@AuthInfoFromRequest() authInfo: AuthInfo): Promise<UserEntity> {
     return this.usersService.findOne({ id: authInfo.userId });
