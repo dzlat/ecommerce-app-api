@@ -1,69 +1,53 @@
 import {
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  ParseUUIDPipe,
+  ParseIntPipe,
+  Query,
   SerializeOptions,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
-import {
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiOkResponse,
-} from '@nestjs/swagger';
-import { ProductEntity } from './entities/product.entity';
-import { Roles } from '@modules/auth/decorators/roles.decorator';
+import { ApiOkResponse, ApiQuery } from '@nestjs/swagger';
 import { Public } from '@modules/auth/decorators/public.decorator';
+import { PaginatedProductEntity } from './entities/paginated-product.entity';
 
-@SerializeOptions({ type: ProductEntity })
-@Controller('movies/:movieId/products')
+const DEFAULT_PER_PAGE = 20;
+
+@SerializeOptions({ type: PaginatedProductEntity })
+@Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
-  @Post()
-  @Roles('ADMIN')
-  @ApiCreatedResponse({ type: ProductEntity })
-  @ApiBearerAuth()
-  create(
-    @Param('movieId', ParseUUIDPipe) movieId: string,
-    @Body() createProductDto: CreateProductDto,
-  ) {
-    return this.productsService.create(movieId, createProductDto);
-  }
-
   @Public()
   @Get()
-  @ApiOkResponse({ type: ProductEntity, isArray: true })
-  findAll(@Param('movieId', ParseUUIDPipe) movieId: string) {
-    return this.productsService.findAll(movieId);
-  }
-
-  @Patch(':productId')
-  @Roles('ADMIN')
-  @ApiOkResponse({ type: ProductEntity })
-  @ApiBearerAuth()
-  update(
-    @Param('movieId', ParseUUIDPipe) movieId: string,
-    @Param('productId', ParseUUIDPipe) productId: string,
-    @Body() updateProductDto: UpdateProductDto,
+  @ApiQuery({ type: Number, name: 'page', required: false, default: 1 })
+  @ApiQuery({
+    type: Number,
+    name: 'per_page',
+    required: false,
+    default: DEFAULT_PER_PAGE,
+  })
+  @ApiQuery({
+    type: String,
+    name: 'sort_by',
+    required: false,
+  })
+  @ApiQuery({
+    type: String,
+    name: 'sort_order',
+    required: false,
+  })
+  @ApiOkResponse({ type: PaginatedProductEntity, isArray: true })
+  async findAll(
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('per_page', ParseIntPipe) perPage: number = DEFAULT_PER_PAGE,
+    @Query('sort_by') sortBy?: string,
+    @Query('sort_order') sortOrder?: string,
   ) {
-    return this.productsService.update(movieId, productId, updateProductDto);
-  }
-
-  @Delete(':productId')
-  @Roles('ADMIN')
-  @ApiOkResponse({ type: ProductEntity })
-  @ApiBearerAuth()
-  remove(
-    @Param('movieId', ParseUUIDPipe) movieId: string,
-    @Param('productId', ParseUUIDPipe) productId: string,
-  ) {
-    return this.productsService.remove(movieId, productId);
+    return this.productsService.findAll({
+      page,
+      perPage,
+      sortBy,
+      sortOrder,
+    });
   }
 }
