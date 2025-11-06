@@ -32,4 +32,28 @@ export class MoviesService {
   remove(id: string) {
     return this.dbService.movie.delete({ where: { id } });
   }
+
+  // TODO: learn SQL more to find a way how to do it better
+  async actualizeMovieRating(movieId: string) {
+    const movieWithAllReviews = await this.dbService.movie.findUnique({
+      where: {
+        id: movieId,
+      },
+      include: {
+        Reviews: true,
+      },
+    });
+
+    if (!movieWithAllReviews) return;
+
+    const { Reviews } = movieWithAllReviews;
+
+    const movieAverageRating =
+      Reviews.reduce((sum, review) => sum + review.rating, 0) / Reviews.length;
+
+    await this.dbService.movie.update({
+      where: { id: movieId },
+      data: { rating: movieAverageRating },
+    });
+  }
 }

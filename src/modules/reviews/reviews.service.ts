@@ -3,17 +3,21 @@ import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { DatabaseService } from '@modules/database/database.service';
 import { ReviewEntity } from './entities/review.entity';
+import { MoviesService } from '@modules/movies/movies.service';
 
 @Injectable()
 export class ReviewsService {
-  constructor(private dbService: DatabaseService) {}
+  constructor(
+    private dbService: DatabaseService,
+    private moviesService: MoviesService,
+  ) {}
 
-  create(
+  async create(
     movieId: string,
     userId: string,
     createReviewDto: CreateReviewDto,
   ): Promise<ReviewEntity> {
-    return this.dbService.review.create({
+    const createdReview = await this.dbService.review.create({
       data: {
         ...createReviewDto,
         User: {
@@ -28,6 +32,10 @@ export class ReviewsService {
         },
       },
     });
+
+    await this.moviesService.actualizeMovieRating(createdReview.movieId);
+
+    return createdReview;
   }
 
   findAllByUser(userId: string): Promise<ReviewEntity[]> {
@@ -56,20 +64,31 @@ export class ReviewsService {
     return review?.userId === userId;
   }
 
-  update(id: string, updateReviewDto: UpdateReviewDto): Promise<ReviewEntity> {
-    return this.dbService.review.update({
+  async update(
+    reviewId: string,
+    updateReviewDto: UpdateReviewDto,
+  ): Promise<ReviewEntity> {
+    const updated = await this.dbService.review.update({
       where: {
-        id,
+        id: reviewId,
       },
       data: updateReviewDto,
     });
+
+    await this.moviesService.actualizeMovieRating(updated.movieId);
+
+    return updated;
   }
 
-  remove(id: string): Promise<ReviewEntity> {
-    return this.dbService.review.delete({
+  async remove(reviewId: string): Promise<ReviewEntity> {
+    const removed = await this.dbService.review.delete({
       where: {
-        id,
+        id: reviewId,
       },
     });
+
+    await this.moviesService.actualizeMovieRating(removed.movieId);
+
+    return removed;
   }
 }

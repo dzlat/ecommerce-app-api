@@ -1,13 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { $Enums } from 'generated/prisma';
-import {
-  IsEnum,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-  Min,
-} from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateMovieDto {
   @IsString()
@@ -23,10 +16,4 @@ export class CreateMovieDto {
   @IsEnum($Enums.Genre)
   @ApiProperty({ enum: Object.values($Enums.Genre) })
   genre: $Enums.Genre;
-
-  @IsNumber()
-  @IsOptional()
-  @Min(0)
-  @ApiProperty({ minimum: 0 })
-  rating?: number;
 }
