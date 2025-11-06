@@ -118,17 +118,18 @@ model User {
 }
 
 model Review {
-  id        String  @id @default(uuid())
+  id        String   @id @default(uuid())
   title     String
   content   String
   rating    Float
-  shouldSee Boolean
+  shouldSee Boolean? @default(false)
   userId    String
   movieId   String
 
   Movie Movie @relation(fields: [movieId], references: [id])
   User  User  @relation(fields: [userId], references: [id])
 
+  @@unique([userId, movieId])
   @@index([movieId])
   @@index([userId])
 }

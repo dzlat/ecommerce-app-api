@@ -10,4 +10,5 @@ export const Routes = {
   FAVORITES: 'favorites',
   USERS: 'users',
   ME: 'me',
+  REVIEWS: 'reviews',
 } as const;
