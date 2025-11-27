@@ -9,26 +9,24 @@ import {
   Post,
   Res,
   SerializeOptions,
-  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { SignInDto } from './dto/sign-in.dto';
 import { AuthEntity } from './entities/auth.entity';
-import {
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiOkResponse,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { SignUpDto } from './dto/sign-up.dto';
 import { Public } from './decorators/public.decorator';
 import type { Response } from 'express';
 import { DEVICE_ID_COOKIE, REFRESH_TOKEN_COOKIE } from './constants';
 import { Cookies } from './decorators/cookies.decorator';
-import { AuthInfoFromRequest } from './decorators/user-from-token.decorator';
-import type { AuthInfo } from './interfaces/auth-info.interface';
 import { RefreshTokenService } from './refresh-token.service';
 import { SessionEntity } from './entities/session.entity';
 import { Routes } from '@common/enums/routes';
+import { LocalAuthGuard } from './guards/local-auth.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { UserEntity } from '@modules/users/entities/user.entity';
+import { SignInDto } from './dto/sign-in.dto';
+import { RefreshTokenGuard } from './guards/refresh-token.guard';
 
 @SerializeOptions({ type: AuthEntity })
 @Controller(Routes.AUTH)
@@ -41,13 +39,14 @@ export class AuthController {
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post(Routes.LOGIN)
-  @ApiOkResponse({ type: AuthEntity })
-  async signIn(
-    @Body() signInDto: SignInDto,
+  @UseGuards(LocalAuthGuard)
+  @ApiBody({ type: SignInDto })
+  async login(
     @Res({ passthrough: true }) response: Response,
+    @CurrentUser() currentUser: UserEntity,
   ): Promise<AuthEntity> {
     const { accessToken, refreshToken, user, deviceId } =
-      await this.authService.signIn(signInDto);
+      await this.authService.signIn(currentUser);
 
     this.setCookie(response, refreshToken, deviceId);
 
@@ -61,7 +60,6 @@ export class AuthController {
 
   @Public()
   @Post(Routes.REGISTER)
-  @ApiCreatedResponse({ type: AuthEntity })
   async signUp(
     @Body() signUpDto: SignUpDto,
     @Res({ passthrough: true }) response: Response,
@@ -79,23 +77,17 @@ export class AuthController {
     };
   }
 
-  @ApiBearerAuth()
+  @Public()
   @Post(Routes.REFRESH)
-  @ApiCreatedResponse({ type: AuthEntity })
+  @UseGuards(RefreshTokenGuard)
   async refresh(
     @Res({ passthrough: true }) response: Response,
-    @AuthInfoFromRequest() authInfo: AuthInfo,
-    @Cookies(DEVICE_ID_COOKIE) deviceId?: string,
-    @Cookies(REFRESH_TOKEN_COOKIE) refreshTokenFromCookie?: string,
+    @CurrentUser() currentUser: UserEntity,
+    @Cookies(DEVICE_ID_COOKIE) deviceId: string,
   ): Promise<AuthEntity> {
-    if (!refreshTokenFromCookie || !deviceId) {
-      throw new UnauthorizedException();
-    }
-
     const { accessToken, refreshToken, user } = await this.authService.refresh(
-      refreshTokenFromCookie,
       deviceId,
-      authInfo.userId,
+      currentUser.id,
     );
 
     response.cookie(REFRESH_TOKEN_COOKIE, refreshToken);
@@ -112,22 +104,21 @@ export class AuthController {
   @ApiBearerAuth()
   logout(
     @Res({ passthrough: true }) response: Response,
-    @AuthInfoFromRequest() authInfo: AuthInfo,
+    @CurrentUser() currentUser: UserEntity,
     @Cookies(DEVICE_ID_COOKIE) deviceId: string,
   ) {
     this.clearCookie(response);
 
     if (deviceId) {
-      return this.authService.logout(authInfo.userId, deviceId);
+      return this.authService.logout(currentUser.id, deviceId);
     }
   }
 
   @Get(Routes.SESSIONS)
   @SerializeOptions({ type: SessionEntity })
-  @ApiOkResponse({ type: SessionEntity })
   @ApiBearerAuth()
-  sessions(@AuthInfoFromRequest() authInfo: AuthInfo) {
-    return this.refreshTokenService.findAllByUser(authInfo.userId);
+  sessions(@CurrentUser() currentUser: UserEntity): Promise<SessionEntity[]> {
+    return this.refreshTokenService.findAllByUser(currentUser.id);
   }
 
   @Delete(`${Routes.SESSIONS}/:id`)
@@ -139,10 +130,10 @@ export class AuthController {
   @Delete(Routes.SESSIONS)
   @ApiBearerAuth()
   terminateAll(
-    @AuthInfoFromRequest() authInfo: AuthInfo,
+    @CurrentUser() currentUser: UserEntity,
     @Cookies(DEVICE_ID_COOKIE) deviceId: string,
   ) {
-    return this.refreshTokenService.removeAllByUser(authInfo.userId, deviceId);
+    return this.refreshTokenService.removeAllByUser(currentUser.id, deviceId);
   }
 
   private setCookie(

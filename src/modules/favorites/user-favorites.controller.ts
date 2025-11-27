@@ -1,7 +1,7 @@
 import { Controller, Get, SerializeOptions } from '@nestjs/common';
 import { FavoritesService } from './favorites.service';
-import { AuthInfoFromRequest } from '@modules/auth/decorators/user-from-token.decorator';
-import type { AuthInfo } from '@modules/auth/interfaces/auth-info.interface';
+import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
+import { UserEntity } from '@modules/users/entities/user.entity';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@modules/auth/decorators/roles.decorator';
 import { FavoriteEntity } from './entities/favorite.entity';
@@ -17,8 +17,8 @@ export class UserFavoritesController {
   @Get()
   @Roles('CUSTOMER')
   findAllByUser(
-    @AuthInfoFromRequest() authInfo: AuthInfo,
+    @CurrentUser() currentUser: UserEntity,
   ): Promise<FavoriteEntity[]> {
-    return this.favoritesService.findAllByUser(authInfo.userId);
+    return this.favoritesService.findAllByUser(currentUser.id);
   }
 }

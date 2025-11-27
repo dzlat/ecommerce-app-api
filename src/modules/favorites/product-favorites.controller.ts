@@ -9,8 +9,8 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { FavoritesService } from './favorites.service';
-import { AuthInfoFromRequest } from '@modules/auth/decorators/user-from-token.decorator';
-import type { AuthInfo } from '@modules/auth/interfaces/auth-info.interface';
+import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
+import { UserEntity } from '@modules/users/entities/user.entity';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@modules/auth/decorators/roles.decorator';
 import { FavoriteEntity } from './entities/favorite.entity';
@@ -26,10 +26,10 @@ export class ProductFavoritesController {
   @Post()
   @Roles('CUSTOMER')
   create(
-    @AuthInfoFromRequest() authInfo: AuthInfo,
+    @CurrentUser() currentUser: UserEntity,
     @Param('productId', ParseUUIDPipe) productId: string,
   ): Promise<FavoriteEntity> {
-    return this.favoritesService.create(authInfo.userId, productId);
+    return this.favoritesService.create(currentUser.id, productId);
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -37,8 +37,8 @@ export class ProductFavoritesController {
   @Roles('CUSTOMER')
   remove(
     @Param('productId', ParseUUIDPipe) productId: string,
-    @AuthInfoFromRequest() authInfo: AuthInfo,
+    @CurrentUser() currentUser: UserEntity,
   ): Promise<void> {
-    return this.favoritesService.remove(authInfo.userId, productId);
+    return this.favoritesService.remove(currentUser.id, productId);
   }
 }

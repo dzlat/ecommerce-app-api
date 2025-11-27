@@ -10,8 +10,8 @@ import {
 import { ReviewsService } from './reviews.service';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { Routes } from '@common/enums/routes';
-import { AuthInfoFromRequest } from '@modules/auth/decorators/user-from-token.decorator';
-import type { AuthInfo } from '@modules/auth/interfaces/auth-info.interface';
+import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
+import { UserEntity } from '@modules/users/entities/user.entity';
 import { Roles } from '@modules/auth/decorators/roles.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ReviewEntity } from './entities/review.entity';
@@ -25,21 +25,21 @@ export class UserReviewsController {
   @Roles('CUSTOMER')
   @Get()
   findAllByUser(
-    @AuthInfoFromRequest() authInfo: AuthInfo,
+    @CurrentUser() currentUser: UserEntity,
   ): Promise<ReviewEntity[]> {
-    return this.reviewsService.findAllByUser(authInfo.userId);
+    return this.reviewsService.findAllByUser(currentUser.id);
   }
 
   @Roles('CUSTOMER')
   @Patch(':reviewId')
   async update(
     @Param('reviewId') reviewId: string,
-    @AuthInfoFromRequest() authInfo: AuthInfo,
+    @CurrentUser() currentUser: UserEntity,
     @Body() updateReviewDto: UpdateReviewDto,
   ): Promise<ReviewEntity> {
     const isOwnReview = await this.reviewsService.checkIfOwnReview(
       reviewId,
-      authInfo.userId,
+      currentUser.id,
     );
 
     if (!isOwnReview) {
@@ -52,11 +52,11 @@ export class UserReviewsController {
   @Delete(':reviewId')
   async delete(
     @Param('reviewId') reviewId: string,
-    @AuthInfoFromRequest() authInfo: AuthInfo,
+    @CurrentUser() currentUser: UserEntity,
   ): Promise<ReviewEntity> {
     const isOwnReview = await this.reviewsService.checkIfOwnReview(
       reviewId,
-      authInfo.userId,
+      currentUser.id,
     );
 
     if (!isOwnReview) {

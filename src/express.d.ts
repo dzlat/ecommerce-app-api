@@ -1,7 +1,7 @@
-import { AuthInfo } from '@modules/auth/interfaces/auth-info.interface';
+import { UserEntity } from '@modules/users/entities/user.entity';
 
 declare module 'express' {
   interface Request {
-    user?: AuthInfo;
+    user?: UserEntity;
   }
 }

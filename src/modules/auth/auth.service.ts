@@ -1,6 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '@modules/users/users.service';
-import { SignInDto } from './dto/sign-in.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from './dto/sign-up.dto';
@@ -17,18 +16,24 @@ export class AuthService {
     private readonly refreshTokenService: RefreshTokenService,
   ) {}
 
-  async signIn(signInDto: SignInDto) {
-    const user = await this.usersService.findOne({ email: signInDto.email });
-    const deviceId = uuidv4();
+  async verifyUser(email: string, password: string) {
+    try {
+      const user = await this.usersService.findOne({ email });
 
-    const isPasswordMatch = await bcrypt.compare(
-      signInDto.password,
-      user.password,
-    );
+      const isPasswordMatch = await bcrypt.compare(password, user.password);
 
-    if (!isPasswordMatch) {
+      if (!isPasswordMatch) {
+        throw new UnauthorizedException();
+      }
+
+      return user;
+    } catch {
       throw new UnauthorizedException();
     }
+  }
+
+  async signIn(user: UserEntity) {
+    const deviceId = uuidv4();
 
     const accessToken = await this.generateAccessToken(user);
     const refreshToken = await this.refreshTokenService.generateAndUpsert(
@@ -62,21 +67,7 @@ export class AuthService {
     };
   }
 
-  async refresh(
-    refreshTokenFromCookie: string,
-    deviceId: string,
-    userId: UserEntity['id'],
-  ) {
-    const tokenRecord = await this.refreshTokenService.verify(
-      userId,
-      deviceId,
-      refreshTokenFromCookie,
-    );
-
-    if (!tokenRecord) {
-      throw new UnauthorizedException();
-    }
-
+  async refresh(deviceId: string, userId: UserEntity['id']) {
     const user = await this.usersService.findOne({ id: userId });
 
     const accessToken = await this.generateAccessToken(user);
@@ -97,7 +88,7 @@ export class AuthService {
   }
 
   private async generateAccessToken(user: UserEntity) {
-    const payload: JwtPayload = { sub: user.id, role: user.role };
+    const payload: JwtPayload = { sub: user.id };
 
     return this.jwtService.signAsync(payload, {
       secret: process.env.ACCESS_TOKEN_SECRET,

@@ -140,13 +140,13 @@ model RefreshToken {
   tokenHash String
   expiresAt DateTime
   createdAt DateTime @default(now())
-  deviceId  String
+  deviceId  String   @unique
   userAgent String?
 
   User User @relation(fields: [userId], references: [id])
 
-  @@unique([deviceId, userId])
   @@index([userId])
+  @@index([deviceId])
 }
 
 model Favorite {

@@ -19,9 +19,8 @@ import {
 } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
 import { Roles } from '@modules/auth/decorators/roles.decorator';
-import { AuthInfoFromRequest } from '@modules/auth/decorators/user-from-token.decorator';
-import type { AuthInfo } from '@modules/auth/interfaces/auth-info.interface';
 import { Routes } from '@common/enums/routes';
+import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
 
 @ApiBearerAuth()
 @Controller(Routes.USERS)
@@ -45,8 +44,8 @@ export class UsersController {
   @Roles('ADMIN', 'CUSTOMER')
   @Get(Routes.ME)
   @ApiOkResponse({ type: UserEntity })
-  me(@AuthInfoFromRequest() authInfo: AuthInfo): Promise<UserEntity> {
-    return this.usersService.findOne({ id: authInfo.userId });
+  me(@CurrentUser() currentUser: UserEntity): UserEntity {
+    return currentUser;
   }
 
   @Get(':id')
