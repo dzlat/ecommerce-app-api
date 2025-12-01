@@ -8,7 +8,6 @@ declare namespace NodeJS {
     REFRESH_TOKEN_SECRET: string;
     ACCESS_TOKEN_TTL: string;
     REFRESH_TOKEN_TTL: string;
-    DEVICE_ID_COOKIE_TTL: string;
     PORT?: string;
   }
 }

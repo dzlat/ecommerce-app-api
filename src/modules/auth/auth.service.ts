@@ -7,6 +7,7 @@ import { UserEntity } from '@modules/users/entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { RefreshTokenService } from './refresh-token.service';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Injectable()
 export class AuthService {
@@ -67,18 +68,18 @@ export class AuthService {
     };
   }
 
-  async refresh(deviceId: string, userId: UserEntity['id']) {
-    const user = await this.usersService.findOne({ id: userId });
-
+  //TODO: refactor
+  async refresh(user: UserEntity, refreshTokenDto: RefreshTokenDto) {
     const accessToken = await this.generateAccessToken(user);
     const refreshToken = await this.refreshTokenService.generateAndUpsert(
       user.id,
-      deviceId,
+      refreshTokenDto.deviceId,
     );
 
     return {
       accessToken,
       refreshToken,
+      deviceId: refreshTokenDto.deviceId,
       user,
     };
   }

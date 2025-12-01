@@ -1,10 +1,14 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { Strategy } from 'passport-custom';
-import { DEVICE_ID_COOKIE, REFRESH_TOKEN_COOKIE } from '../constants';
 import { RefreshTokenService } from '../refresh-token.service';
 import { UsersService } from '@modules/users/users.service';
+import { RefreshTokenDto } from '../dto/refresh-token.dto';
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
@@ -19,14 +23,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
   }
 
   async validate(req: Request) {
-    const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE] as
-      | string
-      | undefined;
-    const deviceId = req.cookies[DEVICE_ID_COOKIE] as string | undefined;
-
-    if (!refreshToken || !deviceId) {
-      throw new UnauthorizedException('Refresh token not found in cookies');
-    }
+    const { refreshToken, deviceId } = req.body as RefreshTokenDto;
 
     const sessionRecord = await this.refreshTokenService.verify(
       deviceId,

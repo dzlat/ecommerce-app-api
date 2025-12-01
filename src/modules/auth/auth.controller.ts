@@ -17,8 +17,6 @@ import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { SignUpDto } from './dto/sign-up.dto';
 import { Public } from './decorators/public.decorator';
 import type { Response } from 'express';
-import { DEVICE_ID_COOKIE, REFRESH_TOKEN_COOKIE } from './constants';
-import { Cookies } from './decorators/cookies.decorator';
 import { RefreshTokenService } from './refresh-token.service';
 import { SessionEntity } from './entities/session.entity';
 import { Routes } from '@common/enums/routes';
@@ -27,6 +25,9 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { SignInDto } from './dto/sign-in.dto';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { LogoutDto } from './dto/logout.dto';
+import { TerminateAllSessionsDto } from './dto/terminate-all-sessions.dto';
 
 @SerializeOptions({ type: AuthEntity })
 @Controller(Routes.AUTH)
@@ -45,73 +46,33 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @CurrentUser() currentUser: UserEntity,
   ): Promise<AuthEntity> {
-    const { accessToken, refreshToken, user, deviceId } =
-      await this.authService.signIn(currentUser);
-
-    this.setCookie(response, refreshToken, deviceId);
-
-    return {
-      accessToken,
-      refreshToken,
-      deviceId,
-      user,
-    };
+    return this.authService.signIn(currentUser);
   }
 
   @Public()
   @Post(Routes.REGISTER)
-  async signUp(
-    @Body() signUpDto: SignUpDto,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<AuthEntity> {
-    const { accessToken, refreshToken, user, deviceId } =
-      await this.authService.signUp(signUpDto);
-
-    this.setCookie(response, refreshToken, deviceId);
-
-    return {
-      accessToken,
-      refreshToken,
-      deviceId,
-      user,
-    };
+  async signUp(@Body() signUpDto: SignUpDto): Promise<AuthEntity> {
+    return this.authService.signUp(signUpDto);
   }
 
   @Public()
   @Post(Routes.REFRESH)
   @UseGuards(RefreshTokenGuard)
   async refresh(
-    @Res({ passthrough: true }) response: Response,
     @CurrentUser() currentUser: UserEntity,
-    @Cookies(DEVICE_ID_COOKIE) deviceId: string,
+    @Body() refreshTokenDto: RefreshTokenDto,
   ): Promise<AuthEntity> {
-    const { accessToken, refreshToken, user } = await this.authService.refresh(
-      deviceId,
-      currentUser.id,
-    );
-
-    response.cookie(REFRESH_TOKEN_COOKIE, refreshToken);
-
-    return {
-      accessToken,
-      refreshToken,
-      user,
-    };
+    return this.authService.refresh(currentUser, refreshTokenDto);
   }
 
   @Post(Routes.LOGOUT)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   logout(
-    @Res({ passthrough: true }) response: Response,
+    @Body() logoutDto: LogoutDto,
     @CurrentUser() currentUser: UserEntity,
-    @Cookies(DEVICE_ID_COOKIE) deviceId: string,
-  ) {
-    this.clearCookie(response);
-
-    if (deviceId) {
-      return this.authService.logout(currentUser.id, deviceId);
-    }
+  ): Promise<void> {
+    return this.authService.logout(currentUser.id, logoutDto.deviceId);
   }
 
   @Get(Routes.SESSIONS)
@@ -123,7 +84,7 @@ export class AuthController {
 
   @Delete(`${Routes.SESSIONS}/:id`)
   @ApiBearerAuth()
-  terminate(@Param('id') id: string) {
+  terminate(@Param('id') id: string): Promise<void> {
     return this.refreshTokenService.removeBySessionId(id);
   }
 
@@ -131,32 +92,11 @@ export class AuthController {
   @ApiBearerAuth()
   terminateAll(
     @CurrentUser() currentUser: UserEntity,
-    @Cookies(DEVICE_ID_COOKIE) deviceId: string,
-  ) {
-    return this.refreshTokenService.removeAllByUser(currentUser.id, deviceId);
-  }
-
-  private setCookie(
-    response: Response,
-    refreshToken: string,
-    deviceId: string,
-  ) {
-    response.cookie(REFRESH_TOKEN_COOKIE, refreshToken, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: Number(process.env.REFRESH_TOKEN_TTL),
-    });
-    response.cookie(DEVICE_ID_COOKIE, deviceId, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: Number(process.env.DEVICE_ID_COOKIE_TTL), // 1 year
-    });
-  }
-
-  private clearCookie(response: Response) {
-    response.clearCookie(REFRESH_TOKEN_COOKIE, { sameSite: 'lax' });
-    response.clearCookie(DEVICE_ID_COOKIE, { sameSite: 'lax' });
+    @Body() terminateAllSessionsDto: TerminateAllSessionsDto,
+  ): Promise<void> {
+    return this.refreshTokenService.removeAllByUser(
+      currentUser.id,
+      terminateAllSessionsDto.deviceId,
+    );
   }
 }

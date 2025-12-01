@@ -11,6 +11,6 @@ export class SignInDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(5)
-  @ApiProperty({ default: 'johndoe' })
+  @ApiProperty({ default: '12345678' })
   password: string;
 }

@@ -10,7 +10,7 @@ export class AuthEntity {
   refreshToken: string;
 
   @ApiProperty()
-  deviceId?: string;
+  deviceId: string;
 
   @Type(() => UserEntity)
   @ApiProperty()
