@@ -1,4 +1,5 @@
 import { ArtificialSlowdownInterceptor } from './common/interceptors/artificial-slowdown.interceptor';
+import { RequestLoggingInterceptor } from './common/interceptors/request-logging.interceptor';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
@@ -43,6 +44,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useGlobalInterceptors(
     new ClassSerializerInterceptor(app.get(Reflector)),
+    new RequestLoggingInterceptor(),
     new ArtificialSlowdownInterceptor(2000),
   );
   app.setGlobalPrefix('api');
