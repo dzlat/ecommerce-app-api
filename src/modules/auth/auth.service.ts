@@ -6,7 +6,10 @@ import { SignUpDto } from './dto/sign-up.dto';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { RefreshTokenService } from './refresh-token.service';
-import { JwtPayload } from './interfaces/jwt-payload.interface';
+import {
+  DecodedJwtPayload,
+  JwtPayload,
+} from './interfaces/jwt-payload.interface';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Injectable()
@@ -38,11 +41,9 @@ export class AuthService {
     const deviceId = uuidv4();
 
     const accessToken = await this.generateAccessToken(user);
-    const decoded = this.jwtService.decode<{ exp?: number }>(accessToken);
+    const decoded = this.jwtService.decode<DecodedJwtPayload>(accessToken);
 
-    const accessTokenExpiresAt = decoded?.exp
-      ? new Date(decoded.exp * 1000).toISOString()
-      : null;
+    const accessTokenExpiresAt = new Date(decoded.exp * 1000).toISOString();
 
     const refreshToken = await this.refreshTokenService.generateAndUpsert(
       user.id,
@@ -69,11 +70,9 @@ export class AuthService {
       deviceId,
     );
 
-    const decoded = this.jwtService.decode<{ exp?: number }>(accessToken);
+    const decoded = this.jwtService.decode<DecodedJwtPayload>(accessToken);
 
-    const accessTokenExpiresAt = decoded?.exp
-      ? new Date(decoded.exp * 1000).toISOString()
-      : null;
+    const accessTokenExpiresAt = new Date(decoded.exp * 1000).toISOString();
 
     return {
       accessToken,
@@ -91,11 +90,9 @@ export class AuthService {
       user.id,
       refreshTokenDto.deviceId,
     );
-    const decoded = this.jwtService.decode<{ exp?: number }>(accessToken);
+    const decoded = this.jwtService.decode<DecodedJwtPayload>(accessToken);
 
-    const accessTokenExpiresAt = decoded?.exp
-      ? new Date(decoded.exp * 1000).toISOString()
-      : null;
+    const accessTokenExpiresAt = new Date(decoded.exp * 1000).toISOString();
 
     return {
       accessToken,

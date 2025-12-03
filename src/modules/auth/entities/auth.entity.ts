@@ -5,7 +5,7 @@ export class AuthEntity {
   accessToken: string;
   refreshToken: string;
   deviceId: string;
-  accessTokenExpiresAt: string | null;
+  accessTokenExpiresAt: string;
 
   @Type(() => UserEntity)
   user: UserEntity;
