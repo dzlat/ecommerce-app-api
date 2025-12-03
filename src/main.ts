@@ -1,3 +1,4 @@
+import { ArtificialSlowdownInterceptor } from './common/interceptors/artificial-slowdown.interceptor';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
@@ -40,7 +41,10 @@ async function bootstrap() {
 
   app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.useGlobalInterceptors(
+    new ClassSerializerInterceptor(app.get(Reflector)),
+    new ArtificialSlowdownInterceptor(2000),
+  );
   app.setGlobalPrefix('api');
   await app.listen(process.env.PORT ?? 8000);
 }
