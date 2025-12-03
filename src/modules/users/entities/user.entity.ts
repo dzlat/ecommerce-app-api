@@ -17,6 +17,7 @@ export class UserEntity implements User {
 
   updatedAt: Date;
 
+  //TODO: change OpenApi type
   role: $Enums.Role;
 
   @ApiHideProperty()

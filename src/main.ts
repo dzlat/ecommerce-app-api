@@ -45,7 +45,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(
     new ClassSerializerInterceptor(app.get(Reflector)),
     new RequestLoggingInterceptor(),
-    new ArtificialSlowdownInterceptor(2000),
+    new ArtificialSlowdownInterceptor(0),
   );
   app.setGlobalPrefix('api');
   await app.listen(process.env.PORT ?? 8000);

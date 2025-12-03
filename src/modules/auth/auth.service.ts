@@ -33,10 +33,17 @@ export class AuthService {
     }
   }
 
+  // TODO: DRY
   async signIn(user: UserEntity) {
     const deviceId = uuidv4();
 
     const accessToken = await this.generateAccessToken(user);
+    const decoded = this.jwtService.decode<{ exp?: number }>(accessToken);
+
+    const accessTokenExpiresAt = decoded?.exp
+      ? new Date(decoded.exp * 1000).toISOString()
+      : null;
+
     const refreshToken = await this.refreshTokenService.generateAndUpsert(
       user.id,
       deviceId,
@@ -45,11 +52,13 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
+      accessTokenExpiresAt,
       deviceId,
       user,
     };
   }
 
+  // TODO: DRY
   async signUp(signUpDto: SignUpDto) {
     const createdUser = await this.usersService.create(signUpDto);
     const deviceId = uuidv4();
@@ -60,25 +69,38 @@ export class AuthService {
       deviceId,
     );
 
+    const decoded = this.jwtService.decode<{ exp?: number }>(accessToken);
+
+    const accessTokenExpiresAt = decoded?.exp
+      ? new Date(decoded.exp * 1000).toISOString()
+      : null;
+
     return {
       accessToken,
       refreshToken,
+      accessTokenExpiresAt,
       deviceId,
       user: createdUser,
     };
   }
 
-  //TODO: refactor
+  //TODO: DRY
   async refresh(user: UserEntity, refreshTokenDto: RefreshTokenDto) {
     const accessToken = await this.generateAccessToken(user);
     const refreshToken = await this.refreshTokenService.generateAndUpsert(
       user.id,
       refreshTokenDto.deviceId,
     );
+    const decoded = this.jwtService.decode<{ exp?: number }>(accessToken);
+
+    const accessTokenExpiresAt = decoded?.exp
+      ? new Date(decoded.exp * 1000).toISOString()
+      : null;
 
     return {
       accessToken,
       refreshToken,
+      accessTokenExpiresAt,
       deviceId: refreshTokenDto.deviceId,
       user,
     };
