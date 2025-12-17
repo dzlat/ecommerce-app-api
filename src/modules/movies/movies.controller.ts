@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  ParseUUIDPipe,
   SerializeOptions,
 } from '@nestjs/common';
 import { MoviesService } from './movies.service';
@@ -14,11 +13,7 @@ import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Public } from '@modules/auth/decorators/public.decorator';
 import { Roles } from '@modules/auth/decorators/roles.decorator';
-import {
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiOkResponse,
-} from '@nestjs/swagger';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { MovieEntity } from './entities/movie.entity';
 import { Routes } from '@common/enums/routes';
 
@@ -29,42 +24,44 @@ export class MoviesController {
 
   @Post()
   @Roles('ADMIN')
-  @ApiCreatedResponse({ type: MovieEntity })
   @ApiBearerAuth()
-  create(@Body() createMovieDto: CreateMovieDto) {
+  create(@Body() createMovieDto: CreateMovieDto): Promise<MovieEntity> {
     return this.moviesService.create(createMovieDto);
   }
 
   @Public()
   @Get()
-  @ApiOkResponse({ type: MovieEntity, isArray: true })
-  findAll() {
+  findAll(): Promise<MovieEntity[]> {
     return this.moviesService.findAll();
   }
 
   @Public()
-  @Get(':id')
-  @ApiOkResponse({ type: MovieEntity })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  @Get(Routes.FEATURED)
+  findAllFeatured(): Promise<MovieEntity[]> {
+    return this.moviesService.findAllFeatured();
+  }
+
+  @Public()
+  @Public()
+  @Get(':slug')
+  findOne(@Param('slug') id: string): Promise<MovieEntity> {
     return this.moviesService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch(':slug')
   @Roles('ADMIN')
-  @ApiOkResponse({ type: MovieEntity })
   @ApiBearerAuth()
   update(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('slug') id: string,
     @Body() updateMovieDto: UpdateMovieDto,
-  ) {
+  ): Promise<MovieEntity> {
     return this.moviesService.update(id, updateMovieDto);
   }
 
-  @Delete(':id')
+  @Delete(':slug')
   @Roles('ADMIN')
-  @ApiOkResponse({ type: MovieEntity })
   @ApiBearerAuth()
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.moviesService.remove(id);
+  remove(@Param('slug') slug: string): Promise<MovieEntity> {
+    return this.moviesService.remove(slug);
   }
 }

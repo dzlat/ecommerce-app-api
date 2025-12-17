@@ -83,6 +83,8 @@ model Movie {
   rating      Float?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  featured    Boolean  @default(false)
+  slug        String   @unique
 
   Products Product[]
   Reviews  Review[]

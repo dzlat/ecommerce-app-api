@@ -6,6 +6,7 @@ export const Routes = {
   LOGOUT: 'logout',
   SESSIONS: 'sessions',
   MOVIES: 'movies',
+  FEATURED: 'featured',
   PRODUCTS: 'products',
   FAVORITES: 'favorites',
   USERS: 'users',

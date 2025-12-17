@@ -1,36 +1,88 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import slugify from 'slugify';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { DatabaseService } from '@modules/database/database.service';
+import { MovieEntity } from './entities/movie.entity';
 
 @Injectable()
 export class MoviesService {
   constructor(private readonly dbService: DatabaseService) {}
 
-  create(createMovieDto: CreateMovieDto) {
-    return this.dbService.movie.create({ data: createMovieDto });
+  async create(createMovieDto: CreateMovieDto): Promise<MovieEntity> {
+    const slug = slugify(createMovieDto.title);
+
+    const data = await this.dbService.movie.create({
+      data: { ...createMovieDto, slug },
+      include: {
+        Products: true,
+      },
+    });
+
+    return MovieEntity.fromPrisma(data);
   }
 
-  findAll() {
-    return this.dbService.movie.findMany();
+  async findAll(): Promise<MovieEntity[]> {
+    const movies = await this.dbService.movie.findMany({
+      include: { Products: true },
+    });
+    return MovieEntity.fromPrismaArray(movies);
   }
 
-  async findOne(id: string) {
-    const movie = await this.dbService.movie.findUnique({ where: { id } });
+  async findAllFeatured(): Promise<MovieEntity[]> {
+    const movies = await this.dbService.movie.findMany({
+      where: {
+        featured: true,
+      },
+      include: {
+        Products: true,
+      },
+    });
+
+    return MovieEntity.fromPrismaArray(movies);
+  }
+
+  async findOne(slug: string): Promise<MovieEntity> {
+    const movie = await this.dbService.movie.findUnique({
+      where: { slug },
+      include: { Products: true },
+    });
 
     if (!movie) {
       throw new NotFoundException();
     }
 
-    return movie;
+    return MovieEntity.fromPrisma(movie);
   }
 
-  update(id: string, updateMovieDto: UpdateMovieDto) {
-    return this.dbService.movie.update({ where: { id }, data: updateMovieDto });
+  async update(
+    id: string,
+    updateMovieDto: UpdateMovieDto,
+  ): Promise<MovieEntity> {
+    const newMovieData: UpdateMovieDto & { slug?: string } = updateMovieDto;
+
+    if (newMovieData.title) {
+      newMovieData.slug = slugify(newMovieData.title);
+    }
+
+    const movie = await this.dbService.movie.update({
+      where: { id },
+      data: newMovieData,
+      include: {
+        Products: true,
+      },
+    });
+
+    return MovieEntity.fromPrisma(movie);
   }
 
-  remove(id: string) {
-    return this.dbService.movie.delete({ where: { id } });
+  async remove(id: string): Promise<MovieEntity> {
+    const movie = await this.dbService.movie.delete({
+      where: { id },
+      include: { Products: true },
+    });
+
+    return MovieEntity.fromPrisma(movie);
   }
 
   // TODO: learn SQL more to find a way how to do it better
