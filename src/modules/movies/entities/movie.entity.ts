@@ -25,6 +25,8 @@ export class MovieEntity implements Movie {
 
   startingPrice: number | null;
 
+  year: number;
+
   @ApiProperty({ enum: Object.values($Enums.MovieFormat), isArray: true })
   availableFormats: $Enums.MovieFormat[];
 
