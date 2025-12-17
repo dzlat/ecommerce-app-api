@@ -31,15 +31,21 @@ export class MoviesService {
 
   async findAllFeatured(): Promise<MovieEntity[]> {
     const movies = await this.dbService.movie.findMany({
+      orderBy: {
+        updatedAt: 'desc',
+      },
       where: {
         featured: true,
       },
       include: {
         Products: true,
       },
+      take: 9,
     });
 
-    return MovieEntity.fromPrismaArray(movies);
+    const moviesWithProducts = movies.filter((movie) => movie.Products.length);
+
+    return MovieEntity.fromPrismaArray(moviesWithProducts);
   }
 
   async findOne(slug: string): Promise<MovieEntity> {
