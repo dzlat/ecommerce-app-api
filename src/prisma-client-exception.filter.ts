@@ -1,3 +1,4 @@
+import { ClientError } from '@common/interfaces/client-error.interface';
 import { ArgumentsHost, Catch, HttpStatus } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Response } from 'express';
@@ -13,19 +14,28 @@ export class PrismaClientExceptionFilter extends BaseExceptionFilter {
     switch (exception.code) {
       case 'P2002': {
         const status = HttpStatus.CONFLICT;
-        const message = `Unique constrains violation for the following fields: ${(exception.meta?.target as string[])?.join(', ')}`;
-        response.status(status).json({
-          statusCode: status,
-          message,
-        });
+        const target = (exception.meta?.target as string[]) || ['field'];
+
+        const error: ClientError = {
+          message: 'Failed to add a record',
+          errors: target.map((field) => ({
+            field,
+            message: `${field} must be unique`,
+          })),
+        };
+
+        response.status(status).json(error);
         break;
       }
       case 'P2025': {
         const status = HttpStatus.NOT_FOUND;
-        response.status(status).json({
-          statusCode: status,
-          message: exception.meta?.cause,
-        });
+
+        const error: ClientError = {
+          message: 'The requested resource was not found',
+          errors: [],
+        };
+
+        response.status(status).json(error);
         break;
       }
       default: {

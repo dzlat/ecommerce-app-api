@@ -4,9 +4,14 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  ClassSerializerInterceptor,
+  ValidationPipe,
+} from '@nestjs/common';
 import { PrismaClientExceptionFilter } from './prisma-client-exception.filter';
 import cookieParser from 'cookie-parser';
+import { ClientError } from '@common/interfaces/client-error.interface';
 
 const allowedOrigins = ['http://localhost:3000', 'http://localhost:8000'];
 
@@ -41,7 +46,26 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      exceptionFactory: (errors) => {
+        const formattedErrors = errors.flatMap((err) => {
+          return Object.values(err.constraints || {}).map((error) => ({
+            field: err.property,
+            message: error,
+          }));
+        });
+
+        const error: ClientError = {
+          message: 'Validation failed',
+          errors: formattedErrors,
+        };
+
+        return new BadRequestException(error);
+      },
+    }),
+  );
   app.useGlobalInterceptors(
     new ClassSerializerInterceptor(app.get(Reflector)),
     new RequestLoggingInterceptor(),
