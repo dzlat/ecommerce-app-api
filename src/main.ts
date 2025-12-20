@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { PrismaClientExceptionFilter } from './prisma-client-exception.filter';
 import cookieParser from 'cookie-parser';
-import { ClientError } from '@common/interfaces/client-error.interface';
+import { ErrorEntity } from '@common/entities/error.entity';
 
 const allowedOrigins = ['http://localhost:3000', 'http://localhost:8000'];
 
@@ -35,6 +35,10 @@ async function bootstrap() {
     .setTitle('Ecommerce')
     .setDescription('The Ecommerce API description')
     .setVersion('1.0')
+    .addGlobalResponse({
+      status: '4XX',
+      type: ErrorEntity,
+    })
     .addBearerAuth()
     .build();
 
@@ -57,7 +61,7 @@ async function bootstrap() {
           }));
         });
 
-        const error: ClientError = {
+        const error: ErrorEntity = {
           message: 'Validation failed',
           errors: formattedErrors,
         };

@@ -1,4 +1,4 @@
-import { ClientError } from '@common/interfaces/client-error.interface';
+import { ErrorEntity } from '@common/entities/error.entity';
 import { ArgumentsHost, Catch, HttpStatus } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Response } from 'express';
@@ -16,7 +16,7 @@ export class PrismaClientExceptionFilter extends BaseExceptionFilter {
         const status = HttpStatus.CONFLICT;
         const target = (exception.meta?.target as string[]) || ['field'];
 
-        const error: ClientError = {
+        const error: ErrorEntity = {
           message: 'Failed to add a record',
           errors: target.map((field) => ({
             field,
@@ -30,7 +30,7 @@ export class PrismaClientExceptionFilter extends BaseExceptionFilter {
       case 'P2025': {
         const status = HttpStatus.NOT_FOUND;
 
-        const error: ClientError = {
+        const error: ErrorEntity = {
           message: 'The requested resource was not found',
           errors: [],
         };

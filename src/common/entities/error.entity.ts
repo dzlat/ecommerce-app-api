@@ -1,4 +1,4 @@
-export interface ClientError {
+export class ErrorEntity {
   message: string;
   errors: {
     field: string;
