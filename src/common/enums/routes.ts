@@ -13,4 +13,5 @@ export const Routes = {
   USERS: 'users',
   ME: 'me',
   REVIEWS: 'reviews',
+  ALL: 'all',
 } as const;

@@ -5,6 +5,7 @@ import { UpdateMovieDto } from './dto/update-movie.dto';
 import { DatabaseService } from '@modules/database/database.service';
 import { MovieEntity } from './entities/movie.entity';
 import { MovieFiltersDataEntity } from './entities/movie-filters-data.entity';
+import { PaginatedMovieEntity } from './entities/paginated-movie.entity';
 
 @Injectable()
 export class MoviesService {
@@ -28,6 +29,53 @@ export class MoviesService {
       include: { Products: true },
     });
     return MovieEntity.fromPrismaArray(movies);
+  }
+
+  async findMovies({
+    page,
+    perPage,
+    sortBy = '',
+    sortOrder,
+  }: {
+    page: number;
+    perPage: number;
+    sortBy?: string;
+    sortOrder?: string;
+  }): Promise<PaginatedMovieEntity> {
+    const offset = (page - 1) * perPage;
+
+    const totalMovies = await this.dbService.movie.count({
+      where: {
+        Products: {
+          some: {},
+        },
+      },
+    });
+    const results = await this.dbService.movie.findMany({
+      skip: offset,
+      where: {
+        Products: {
+          some: {},
+        },
+      },
+      take: perPage,
+      include: {
+        Products: true,
+      },
+      orderBy: {
+        [sortBy]: sortOrder,
+      },
+    });
+
+    const pages = Math.ceil(totalMovies / perPage);
+
+    return {
+      data: MovieEntity.fromPrismaArray(results),
+      page,
+      perPage,
+      total: totalMovies,
+      pages,
+    };
   }
 
   async findAllFeatured(): Promise<MovieEntity[]> {
