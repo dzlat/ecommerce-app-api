@@ -16,6 +16,7 @@ import { Roles } from '@modules/auth/decorators/roles.decorator';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { MovieEntity } from './entities/movie.entity';
 import { Routes } from '@common/enums/routes';
+import { MovieFiltersDataEntity } from './entities/movie-filters-data.entity';
 
 @SerializeOptions({ type: MovieEntity })
 @Controller(Routes.MOVIES)
@@ -33,6 +34,13 @@ export class MoviesController {
   @Get()
   findAll(): Promise<MovieEntity[]> {
     return this.moviesService.findAll();
+  }
+
+  @SerializeOptions({ type: MovieFiltersDataEntity })
+  @Public()
+  @Get(Routes.FILTERS)
+  getMoviesFilters(): Promise<MovieFiltersDataEntity> {
+    return this.moviesService.getMoviesFiltersData();
   }
 
   @Public()

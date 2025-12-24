@@ -4,6 +4,7 @@ import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { DatabaseService } from '@modules/database/database.service';
 import { MovieEntity } from './entities/movie.entity';
+import { MovieFiltersDataEntity } from './entities/movie-filters-data.entity';
 
 @Injectable()
 export class MoviesService {
@@ -89,6 +90,17 @@ export class MoviesService {
     });
 
     return MovieEntity.fromPrisma(movie);
+  }
+
+  async getMoviesFiltersData(): Promise<MovieFiltersDataEntity> {
+    const genres = await this.dbService.movie.findMany({
+      include: {
+        Products: true,
+      },
+      distinct: ['genre'],
+    });
+
+    return { genres: genres.map((m) => m.genre) };
   }
 
   // TODO: learn SQL more to find a way how to do it better

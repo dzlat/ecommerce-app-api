@@ -4,6 +4,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductEntity } from './entities/product.entity';
 import { DatabaseService } from '@modules/database/database.service';
 import { PaginatedProductEntity } from './entities/paginated-product.entity';
+import { ProductFiltersEntity } from './entities/product-filters-data.entity';
 
 @Injectable()
 export class ProductsService {
@@ -51,6 +52,30 @@ export class ProductsService {
       perPage,
       total: totalProducts,
       pages,
+    };
+  }
+
+  async getProductsFiltersData(): Promise<ProductFiltersEntity> {
+    const formats = await this.dbService.product.findMany({
+      select: { format: true },
+      distinct: ['format'],
+    });
+
+    const prices = await this.dbService.product.aggregate({
+      _min: {
+        price: true,
+      },
+      _max: {
+        price: true,
+      },
+    });
+
+    return {
+      formats: formats.map((format) => format.format),
+      prices: {
+        min: prices._min.price?.toNumber(),
+        max: prices._max.price?.toNumber(),
+      },
     };
   }
 

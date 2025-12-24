@@ -1,3 +1,4 @@
+import { ProductFiltersEntity } from './entities/product-filters-data.entity';
 import {
   Controller,
   Get,
@@ -14,11 +15,11 @@ import { Routes } from '@common/enums/routes';
 const DEFAULT_PER_PAGE = 20;
 
 @ApiTags('Products')
-@SerializeOptions({ type: PaginatedProductEntity })
 @Controller(Routes.PRODUCTS)
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  @SerializeOptions({ type: PaginatedProductEntity })
   @Public()
   @Get()
   @ApiQuery({ type: Number, name: 'page', required: false, default: 1 })
@@ -51,5 +52,12 @@ export class ProductsController {
       sortBy,
       sortOrder,
     });
+  }
+
+  @Public()
+  @SerializeOptions({ type: ProductFiltersEntity })
+  @Get(Routes.FILTERS)
+  getProductsFiltersData(): Promise<ProductFiltersEntity> {
+    return this.productsService.getProductsFiltersData();
   }
 }
