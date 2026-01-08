@@ -1,6 +1,6 @@
 import { DEFAULT_PAGE, DEFAULT_PER_PAGE } from '@common/constants';
 import { Type } from 'class-transformer';
-import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsIn, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class PaginationQueryDto {
   @IsNumber()
@@ -15,11 +15,11 @@ export class PaginationQueryDto {
   @Type(() => Number)
   perPage?: number = DEFAULT_PER_PAGE;
 
-  @IsNumber()
+  @IsIn(['asc', 'desc'])
   @IsOptional()
-  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
 
   @IsString()
   @IsOptional()
-  sort_order?: string;
+  sort_by?: string;
 }

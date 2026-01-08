@@ -20,7 +20,6 @@ import { Routes } from '@common/enums/routes';
 import { MovieFiltersDataEntity } from './entities/movie-filters-data.entity';
 import { PaginatedMovieEntity } from './entities/paginated-movie.entity';
 import { FindMoviesQueryDto } from './dto/find-movies-query.dto';
-import { DEFAULT_PAGE, DEFAULT_PER_PAGE } from '@common/constants';
 
 @SerializeOptions({ type: MovieEntity })
 @Controller(Routes.MOVIES)
@@ -45,19 +44,7 @@ export class MoviesController {
   findMovies(
     @Query() query: FindMoviesQueryDto,
   ): Promise<PaginatedMovieEntity> {
-    const {
-      page = DEFAULT_PAGE,
-      perPage = DEFAULT_PER_PAGE,
-      sort_by,
-      sort_order,
-    } = query;
-
-    return this.moviesService.findMovies({
-      page,
-      perPage,
-      sortBy: sort_by,
-      sortOrder: sort_order,
-    });
+    return this.moviesService.findMovies(query);
   }
 
   @SerializeOptions({ type: MovieFiltersDataEntity })

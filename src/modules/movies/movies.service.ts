@@ -6,6 +6,8 @@ import { DatabaseService } from '@modules/database/database.service';
 import { MovieEntity } from './entities/movie.entity';
 import { MovieFiltersDataEntity } from './entities/movie-filters-data.entity';
 import { PaginatedMovieEntity } from './entities/paginated-movie.entity';
+import { FindMoviesQueryDto } from './dto/find-movies-query.dto';
+import { DEFAULT_PAGE, DEFAULT_PER_PAGE } from '@common/constants';
 
 @Injectable()
 export class MoviesService {
@@ -32,16 +34,15 @@ export class MoviesService {
   }
 
   async findMovies({
-    page,
-    perPage,
-    sortBy = '',
-    sortOrder,
-  }: {
-    page: number;
-    perPage: number;
-    sortBy?: string;
-    sortOrder?: string;
-  }): Promise<PaginatedMovieEntity> {
+    page = DEFAULT_PAGE,
+    perPage = DEFAULT_PER_PAGE,
+    sort_by,
+    sort_order,
+    formats,
+    genres,
+    minPrice,
+    maxPrice,
+  }: FindMoviesQueryDto): Promise<PaginatedMovieEntity> {
     const offset = (page - 1) * perPage;
 
     const totalMovies = await this.dbService.movie.count({
@@ -52,18 +53,29 @@ export class MoviesService {
       },
     });
     const results = await this.dbService.movie.findMany({
-      skip: offset,
       where: {
+        genre: {
+          in: genres,
+        },
         Products: {
-          some: {},
+          some: {
+            price: {
+              gt: minPrice,
+              lt: maxPrice,
+            },
+            format: {
+              in: formats,
+            },
+          },
         },
       },
+      skip: offset,
       take: perPage,
+      orderBy: {
+        [sort_by ?? '']: sort_order,
+      },
       include: {
         Products: true,
-      },
-      orderBy: {
-        [sortBy]: sortOrder,
       },
     });
 
