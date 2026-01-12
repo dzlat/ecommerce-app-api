@@ -1,4 +1,4 @@
-import { RefreshToken } from '@generated/prisma';
+import { RefreshToken } from '@prisma/generated';
 import { ApiHideProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 

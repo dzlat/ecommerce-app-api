@@ -1,6 +1,6 @@
 import { ApiHideProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
-import { $Enums, User } from 'generated/prisma';
+import { $Enums, User } from '@prisma/generated';
 
 export class UserEntity implements User {
   constructor(user: User) {

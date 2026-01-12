@@ -1,4 +1,4 @@
-import { Review } from '@generated/prisma';
+import { Review } from '@prisma/generated';
 
 export class ReviewEntity implements Review {
   id: string;

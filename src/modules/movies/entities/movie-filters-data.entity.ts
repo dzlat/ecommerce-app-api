@@ -1,4 +1,4 @@
-import { $Enums } from '@generated/prisma';
+import { $Enums } from '@prisma/generated';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class MovieFiltersDataEntity {

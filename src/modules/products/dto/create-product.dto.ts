@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { $Enums } from 'generated/prisma';
+import { $Enums } from '@prisma/generated';
 import { IsEnum, IsInt, IsNumber, Min } from 'class-validator';
 
 export class CreateProductDto {

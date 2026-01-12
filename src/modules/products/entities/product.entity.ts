@@ -1,7 +1,7 @@
 import { DecimalProperty } from '@common/decorators/decimal.decorator';
 import { DecimalPatch } from '@common/entities/decimal.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { $Enums, Product } from 'generated/prisma';
+import { $Enums, Product } from '@prisma/generated';
 
 export class ProductEntity implements Product {
   @ApiProperty()

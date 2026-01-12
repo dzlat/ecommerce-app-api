@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { $Enums, Movie, Product } from 'generated/prisma';
+import { $Enums, Movie, Product } from '@prisma/generated';
 
 type MovieWithProducts = Movie & { Products: Product[] };
 

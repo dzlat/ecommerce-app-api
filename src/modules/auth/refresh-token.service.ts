@@ -3,7 +3,7 @@ import { UserEntity } from '@modules/users/entities/user.entity';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { generateOpaqueToken } from './utils/refresh-token.util';
-import { RefreshToken } from '@generated/prisma';
+import { RefreshToken } from '@prisma/generated';
 
 const ROUNDS_OF_HASHING = 10;
 

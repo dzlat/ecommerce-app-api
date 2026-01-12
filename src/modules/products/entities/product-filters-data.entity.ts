@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { $Enums } from 'generated/prisma';
+import { $Enums } from '@prisma/generated';
 
 export class ProductFiltersEntity {
   @ApiProperty({ enum: Object.values($Enums.MovieFormat), isArray: true })

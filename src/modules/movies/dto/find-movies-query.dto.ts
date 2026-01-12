@@ -1,4 +1,4 @@
-import { $Enums } from 'generated/prisma';
+import { $Enums } from '@prisma/generated';
 import { PaginationQueryDto } from '@common/dto/pagination-query.dto';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsIn, IsNumber, IsOptional } from 'class-validator';
