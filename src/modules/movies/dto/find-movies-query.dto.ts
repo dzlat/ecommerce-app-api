@@ -15,13 +15,13 @@ export class FindMoviesQueryDto extends PaginationQueryDto {
   @IsArray()
   @TransformToArray()
   @IsOptional()
-  @IsIn(Object.values($Enums.Genre))
+  @IsIn(Object.values($Enums.Genre), { each: true })
   genres?: $Enums.Genre[];
 
   @IsArray()
   @IsOptional()
   @TransformToArray()
-  @IsIn(Object.values($Enums.MovieFormat))
+  @IsIn(Object.values($Enums.MovieFormat), { each: true })
   @ApiProperty({ enum: Object.values($Enums.MovieFormat), isArray: true })
   formats?: $Enums.MovieFormat[];
 
