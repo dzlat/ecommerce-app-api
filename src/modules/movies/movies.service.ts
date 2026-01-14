@@ -8,6 +8,7 @@ import { MovieFiltersDataEntity } from './entities/movie-filters-data.entity';
 import { PaginatedMovieEntity } from './entities/paginated-movie.entity';
 import { FindMoviesQueryDto } from './dto/find-movies-query.dto';
 import { DEFAULT_PAGE, DEFAULT_PER_PAGE } from '@common/constants';
+import { Prisma } from '@prisma/generated';
 
 @Injectable()
 export class MoviesService {
@@ -42,46 +43,36 @@ export class MoviesService {
     genres,
     minPrice,
     maxPrice,
+    query,
   }: FindMoviesQueryDto): Promise<PaginatedMovieEntity> {
     const offset = (page - 1) * perPage;
 
-    const totalMovies = await this.dbService.movie.count({
-      where: {
-        genre: {
-          in: genres,
-        },
-        Products: {
-          some: {
-            price: {
-              gt: minPrice,
-              lt: maxPrice,
-            },
-            format: {
-              in: formats,
-            },
+    const moviesWhereInput: Prisma.MovieWhereInput = {
+      title: {
+        contains: query,
+        mode: 'insensitive',
+      },
+      genre: {
+        in: genres,
+      },
+      Products: {
+        some: {
+          price: {
+            gt: minPrice,
+            lt: maxPrice,
+          },
+          format: {
+            in: formats,
           },
         },
       },
+    };
+
+    const totalMovies = await this.dbService.movie.count({
+      where: moviesWhereInput,
     });
     const results = await this.dbService.movie.findMany({
-      where: {
-        genre: {
-          in: genres,
-        },
-        Products: {
-          every: {
-            price: {
-              gte: minPrice,
-              lte: maxPrice,
-            },
-          },
-          some: {
-            format: {
-              in: formats,
-            },
-          },
-        },
-      },
+      where: moviesWhereInput,
       skip: offset,
       take: perPage,
       orderBy: {

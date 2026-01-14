@@ -1,7 +1,7 @@
 import { $Enums } from '@prisma/generated';
 import { PaginationQueryDto } from '@common/dto/pagination-query.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsIn, IsNumber, IsOptional } from 'class-validator';
+import { IsArray, IsIn, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 const TransformToArray = <T>() =>
@@ -38,4 +38,8 @@ export class FindMoviesQueryDto extends PaginationQueryDto {
   @IsIn(['rating', 'year'])
   @IsOptional()
   declare sort_by?: 'rating' | 'year';
+
+  @IsOptional()
+  @IsString()
+  query?: string;
 }
