@@ -47,13 +47,6 @@ export class MoviesService {
 
     const totalMovies = await this.dbService.movie.count({
       where: {
-        Products: {
-          some: {},
-        },
-      },
-    });
-    const results = await this.dbService.movie.findMany({
-      where: {
         genre: {
           in: genres,
         },
@@ -63,6 +56,26 @@ export class MoviesService {
               gt: minPrice,
               lt: maxPrice,
             },
+            format: {
+              in: formats,
+            },
+          },
+        },
+      },
+    });
+    const results = await this.dbService.movie.findMany({
+      where: {
+        genre: {
+          in: genres,
+        },
+        Products: {
+          every: {
+            price: {
+              gte: minPrice,
+              lte: maxPrice,
+            },
+          },
+          some: {
             format: {
               in: formats,
             },
@@ -79,7 +92,7 @@ export class MoviesService {
       },
     });
 
-    const pages = Math.ceil(totalMovies / perPage);
+    const pages = Math.ceil(totalMovies / perPage) || 1;
 
     return {
       data: MovieEntity.fromPrismaArray(results),
